@@ -2,11 +2,15 @@
 <img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
 </div>
 
-# Run and deploy your AI Studio app
+# RuangWarga App (`ruangwarga-app`)
 
-This contains everything you need to run your app locally.
-
-View your app in AI Studio: https://ai.studio/apps/4286c727-2a19-429c-9347-dd019374baf7
+Aplikasi Mobile Layanan Digital Warga RT/RW modern berbasis Jetpack Compose dengan fitur lengkap:
+- 📢 **Template Banner & Latar Interaktif Postingan**
+- 🚨 **Peringatan Dini & Status Darurat Siaga Warga**
+- 💰 **Laporan Keuangan & Buku Kas Transparan**
+- 📦 **Manajemen & Peminjaman Aset RW**
+- 📂 **Katalog Layanan Digital Warga (Surat, Iuran, Pengaduan, Data Warga)**
+- 🗳️ **Polling Musyawarah & Partisipasi Warga**
 
 ## Run Locally
 
