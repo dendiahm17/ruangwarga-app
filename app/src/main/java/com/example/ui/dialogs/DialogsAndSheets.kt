@@ -498,28 +498,47 @@ fun LetterDetailBottomSheet(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Action Buttons: Share Document
+            // Action Buttons: Share & Download PDF Document
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Button(
                     onClick = {
-                        shareOfficialDocument(context, "Surat Resmi - ${letter.jenisSurat}", officialLetterText)
+                        val pdfFile = com.example.utils.DocumentPdfGenerator.generateLetterPdf(context, letter, profile)
+                        if (pdfFile != null) {
+                            com.example.utils.DocumentPdfGenerator.openOrSharePdf(
+                                context,
+                                pdfFile,
+                                "Surat Pengantar ${letter.jenisSurat} - ${profile.nama}"
+                            )
+                        } else {
+                            shareOfficialDocument(context, "Surat Resmi - ${letter.jenisSurat}", officialLetterText)
+                        }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = AccentRed), shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
+                    shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .weight(1f)
                         .height(48.dp)
                 ) {
                     Icon(imageVector = Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Bagikan Dokumen", fontSize = 13.sp)
+                    Text("Bagikan PDF", fontSize = 13.sp)
                 }
 
                 OutlinedButton(
                     onClick = {
-                        Toast.makeText(context, "Dokumen tersimpan ke penyimpanan!", Toast.LENGTH_SHORT).show()
+                        val pdfFile = com.example.utils.DocumentPdfGenerator.generateLetterPdf(context, letter, profile)
+                        if (pdfFile != null) {
+                            com.example.utils.DocumentPdfGenerator.openOrSharePdf(
+                                context,
+                                pdfFile,
+                                "Cetak / Buka PDF Surat"
+                            )
+                        } else {
+                            Toast.makeText(context, "Gagal membuat dokumen PDF", Toast.LENGTH_SHORT).show()
+                        }
                     },
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
@@ -528,7 +547,7 @@ fun LetterDetailBottomSheet(
                 ) {
                     Icon(imageVector = Icons.Default.Download, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Unduh PDF", fontSize = 13.sp)
+                    Text("Unduh / Cetak", fontSize = 13.sp)
                 }
             }
 
@@ -730,14 +749,24 @@ fun CreateComplaintBottomSheet(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Lampiran Foto
+            // Lampiran Foto Nyata dengan Photo Picker Android
             Text(text = "Lampiran Foto Bukti (Opsional)", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
             Spacer(modifier = Modifier.height(6.dp))
+
+            val photoPickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+                contract = androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia()
+            ) { uri: android.net.Uri? ->
+                if (uri != null) {
+                    selectedPhoto = uri.toString()
+                }
+            }
 
             if (selectedPhoto != null) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(12.dp)
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
                     Row(
                         modifier = Modifier
@@ -746,10 +775,19 @@ fun CreateComplaintBottomSheet(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
                             Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = AccentGreen, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(text = selectedPhoto ?: "", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = TextPrimary)
+                            Text(
+                                text = if (selectedPhoto!!.startsWith("content://")) "Foto Bukti Terpilih (${selectedPhoto!!.takeLast(14)})" else selectedPhoto!!,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = TextPrimary,
+                                maxLines = 1
+                            )
                         }
                         IconButton(onClick = { selectedPhoto = null }, modifier = Modifier.size(24.dp)) {
                             Icon(imageVector = Icons.Default.Close, contentDescription = "Hapus", tint = TextSecondary, modifier = Modifier.size(16.dp))
@@ -757,14 +795,30 @@ fun CreateComplaintBottomSheet(
                     }
                 }
             } else {
-                OutlinedButton(
-                    onClick = { showPhotoSelector = true },
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(imageVector = Icons.Default.AddPhotoAlternate, contentDescription = null, tint = PrimaryBlue)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Pilih / Lampirkan Foto Bukti", color = PrimaryBlue)
+                    OutlinedButton(
+                        onClick = {
+                            photoPickerLauncher.launch(
+                                androidx.activity.result.PickVisualMediaRequest(androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(imageVector = Icons.Default.AddPhotoAlternate, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Buka Galeri HP", color = PrimaryBlue, fontSize = 12.sp)
+                    }
+
+                    OutlinedButton(
+                        onClick = { showPhotoSelector = !showPhotoSelector },
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Contoh", color = TextSecondary, fontSize = 12.sp)
+                    }
                 }
             }
 
@@ -1178,9 +1232,18 @@ fun PayDuesBottomSheet(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Bukti Pembayaran
-            Text(text = "Bukti Bayar / Screenshot", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+            // Bukti Pembayaran dengan Photo Picker
+            Text(text = "Bukti Bayar / Screenshot Transfer", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
             Spacer(modifier = Modifier.height(6.dp))
+
+            val duesPhotoPickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+                contract = androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia()
+            ) { uri: android.net.Uri? ->
+                if (uri != null) {
+                    buktiBayarSelected = uri.toString()
+                }
+            }
+
             if (buktiBayarSelected != null) {
                 Row(
                     modifier = Modifier
@@ -1190,22 +1253,44 @@ fun PayDuesBottomSheet(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = "✓ $buktiBayarSelected", fontSize = 12.sp, color = AccentGreenDark, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = if (buktiBayarSelected!!.startsWith("content://")) "✓ Struk Foto Terlampir (${buktiBayarSelected!!.takeLast(12)})" else "✓ $buktiBayarSelected",
+                        fontSize = 12.sp,
+                        color = AccentGreenDark,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1
+                    )
                     IconButton(onClick = { buktiBayarSelected = null }, modifier = Modifier.size(20.dp)) {
                         Icon(imageVector = Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
                     }
                 }
             } else {
-                OutlinedButton(
-                    onClick = {
-                        buktiBayarSelected = "Bukti_Trf_${selectedMonth.replace(" ", "")}.png"
-                    },
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(imageVector = Icons.Default.AddPhotoAlternate, contentDescription = null, tint = PrimaryBlue)
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Lampirkan Struk / Bukti Bayar", color = PrimaryBlue, fontSize = 12.sp)
+                    OutlinedButton(
+                        onClick = {
+                            duesPhotoPickerLauncher.launch(
+                                androidx.activity.result.PickVisualMediaRequest(androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Icon(imageVector = Icons.Default.AddPhotoAlternate, contentDescription = null, tint = PrimaryBlue)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Pilih Struk dari Galeri", color = PrimaryBlue, fontSize = 12.sp)
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            buktiBayarSelected = "Bukti_Trf_${selectedMonth.replace(" ", "")}.png"
+                        },
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text("Auto Bukti", color = TextSecondary, fontSize = 12.sp)
+                    }
                 }
             }
 

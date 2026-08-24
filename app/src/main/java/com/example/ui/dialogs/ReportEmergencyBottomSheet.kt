@@ -228,14 +228,29 @@ fun ReportEmergencyBottomSheet(
             )
         )
         Spacer(modifier = Modifier.height(12.dp))
-        // 5. Tambah Foto Bukti
+        // 5. Tambah Foto Bukti dengan Photo Picker Android
+        val emergencyPhotoPicker = androidx.activity.compose.rememberLauncherForActivityResult(
+            contract = androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia()
+        ) { uri: android.net.Uri? ->
+            if (uri != null) {
+                hasPhoto = true
+                Toast.makeText(context, "Foto bukti kejadian berhasil dipilih", Toast.LENGTH_SHORT).show()
+            }
+        }
+
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(60.dp)
                 .clickable {
-                    hasPhoto = !hasPhoto
-                    Toast.makeText(context, if (hasPhoto) "Foto bukti ditambahkan" else "Foto dihapus", Toast.LENGTH_SHORT).show()
+                    if (!hasPhoto) {
+                        emergencyPhotoPicker.launch(
+                            androidx.activity.result.PickVisualMediaRequest(androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    } else {
+                        hasPhoto = false
+                        Toast.makeText(context, "Foto bukti dihapus", Toast.LENGTH_SHORT).show()
+                    }
                 },
             shape = RoundedCornerShape(10.dp),
             colors = CardDefaults.cardColors(containerColor = if (hasPhoto) Color(0xFFDCFCE7) else BackgroundLight),
@@ -249,10 +264,10 @@ fun ReportEmergencyBottomSheet(
                 Icon(imageVector = Icons.Default.AddAPhoto, contentDescription = null, tint = if (hasPhoto) AccentGreenDark else TextSecondary, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = if (hasPhoto) "Foto Bukti Terlampir ✓ (Tap ganti)" else "Tambahkan Foto Kejadian (Opsional)",
-                    fontSize = 11.5.sp,
+                    text = if (hasPhoto) "Foto Bukti Kejadian Terlampir (Klik untuk hapus)" else "Ambil / Pilih Foto Bukti Lapangan",
+                    fontSize = 12.sp,
                     color = if (hasPhoto) AccentGreenDark else TextSecondary,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = if (hasPhoto) FontWeight.Bold else FontWeight.Normal
                 )
             }
         }

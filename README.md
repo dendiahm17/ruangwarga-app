@@ -1,26 +1,42 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
-
 # RuangWarga App (`ruangwarga-app`)
 
-Aplikasi Mobile Layanan Digital Warga RT/RW modern berbasis Jetpack Compose dengan fitur lengkap:
-- 📢 **Template Banner & Latar Interaktif Postingan**
-- 🚨 **Peringatan Dini & Status Darurat Siaga Warga**
-- 💰 **Laporan Keuangan & Buku Kas Transparan**
-- 📦 **Manajemen & Peminjaman Aset RW**
-- 📂 **Katalog Layanan Digital Warga (Surat, Iuran, Pengaduan, Data Warga)**
-- 🗳️ **Polling Musyawarah & Partisipasi Warga**
+Aplikasi Mobile Layanan Digital Warga RT/RW modern berbasis Android (Jetpack Compose) yang dirancang untuk memudahkan komunikasi, transparansi keuangan, dan pelayanan warga secara terpadu.
 
-## Run Locally
+---
 
-**Prerequisites:**  [Android Studio](https://developer.android.com/studio)
+## ✨ Fitur Utama
 
+- 📢 **Template Banner & Latar Interaktif Postingan**: Pembuatan postingan dengan tema visual yang dinamis (Kerja Bakti, Senam, Musyawarah, Pengumuman, Posyandu, Donasi, dll).
+- 🚨 **Peringatan Dini & Status Darurat Siaga Warga**: Sistem notifikasi darurat (Banjir, Kebakaran, Medis) dengan tombol aksi relawan langsung.
+- 💰 **Laporan Keuangan & Buku Kas Transparan**: Rekapitulasi kas masuk/keluar RW, saldo riil, serta visualisasi grafik pemasukan dan pengeluaran.
+- 📦 **Manajemen & Peminjaman Aset RW**: Inventarisasi barang/fasilitas warga beserta status ketersediaan dan form peminjaman.
+- 📂 **Katalog Layanan Digital Warga**: Pengajuan surat pengantar, pembayaran iuran kas/sampah, pengaduan lingkungan, dan direktori data warga.
+- 🗳️ **Polling & Musyawarah Warga**: Fitur voting interaktif untuk pengambilan keputusan bersama.
 
-1. Open Android Studio
-2. Select **Open** and choose the directory containing this project
-3. Allow Android Studio to fix any incompatibilities as it imports the project.
-4. Create a file named `.env` in the project directory and set `GEMINI_API_KEY` in that file to your Gemini API key (see `.env.example` for an example)
-5. Remove this line from the app's `build.gradle.kts` file: `signingConfig = signingConfigs.getByName("debugConfig")`
-6. Run the app on an emulator or physical device
-7. If you have already published your app in AI Studio, please [request upload key reset](https://support.google.com/googleplay/android-developer/answer/9842756#zippy=%2Crequest-an-upload-key-reset) in Google Play Console.
+---
+
+## 🛠️ Menjalankan Aplikasi
+
+### Prasyarat
+- [Android Studio](https://developer.android.com/studio) (Koala / Ladybug atau versi terbaru)
+- Android SDK (API 34/36)
+- JDK 17 atau JDK 21
+
+### Langkah Instalasi
+1. Buka folder proyek ini di **Android Studio**.
+2. Tunggu proses Gradle Sync selesai.
+3. Hubungkan perangkat fisik Android melalui USB Debugging atau jalankan Android Virtual Device (AVD).
+4. Klik tombol **Run** atau jalankan perintah:
+   ```bash
+   ./gradlew installDebug
+   ```
+
+---
+
+## 📱 Arsitektur & Teknologi
+
+- **UI Framework**: Jetpack Compose & Material 3
+- **Database Lokal**: Android Room Database (SQLite)
+- **Asinkron & Reaktif**: Kotlin Coroutines & StateFlow
+- **Image Loading**: Coil Compose
+- **Design & Layout**: Pure Solid Design with Modern Glassmorphism Accent

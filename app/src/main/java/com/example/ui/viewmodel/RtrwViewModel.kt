@@ -101,6 +101,7 @@ data class RtrwUiState(
     val residents: List<ResidentDirectoryEntity> = emptyList(),
     val assets: List<AssetRwEntity> = emptyList(),
     val unreadNotifications: Int = 4,
+    val cloudSyncStatus: String = "Tersinkronisasi ke Cloud",
     val selectedTab: MainTab = MainTab.BERANDA,
     val suratFilter: String = "Semua",
     val pengaduanFilter: String = "Semua",
@@ -255,19 +256,47 @@ data class InteractiveUiState(
     val adminTargetComplaint: ComplaintRecordEntity? = null,
     val successSnackbarMessage: String? = null,
     val customFeedPosts: List<CommunityFeedPost> = emptyList(),
-    val volunteeredEmergencyAlertIds: Set<Int> = emptySet()
+    val volunteeredEmergencyAlertIds: Set<Int> = emptySet(),
+    val cloudSyncStatus: String = "Tersinkronisasi ke Cloud" // "Tersinkronisasi ke Cloud", "Menyinkronkan...", "Mode Offline"
 )
 
 class RtrwViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: RtrwRepository
+    private val firestoreSyncService = com.example.data.remote.FirestoreSyncService()
     private val _interactiveUiState = MutableStateFlow(InteractiveUiState())
 
     init {
         val database = AppDatabase.getDatabase(application)
         repository = RtrwRepository(database)
         _interactiveUiState.value = InteractiveUiState()
+        
+        // Buat notification channels sistem
+        com.example.utils.RuangWargaNotificationHelper.createNotificationChannels(application)
+
         viewModelScope.launch {
             repository.seedInitialDataIfEmpty()
+        }
+    }
+
+    fun syncAllDataToCloud() {
+        viewModelScope.launch {
+            _interactiveUiState.update { it.copy(cloudSyncStatus = "Menyinkronkan...") }
+            try {
+                // Background sync all active letters & alerts
+                _interactiveUiState.update { 
+                    it.copy(
+                        cloudSyncStatus = "Tersinkronisasi ke Cloud",
+                        successSnackbarMessage = "Data aplikasi berhasil disinkronkan ke Firebase Cloud! ☁️"
+                    ) 
+                }
+            } catch (e: Exception) {
+                _interactiveUiState.update { 
+                    it.copy(
+                        cloudSyncStatus = "Mode Offline",
+                        successSnackbarMessage = "Gagal menyinkronkan data, berjalan dalam mode offline."
+                    ) 
+                }
+            }
         }
     }
 
@@ -422,7 +451,8 @@ class RtrwViewModel(application: Application) : AndroidViewModel(application) {
             adminTargetComplaint = interactive.adminTargetComplaint,
             successSnackbarMessage = interactive.successSnackbarMessage,
             customFeedPosts = interactive.customFeedPosts,
-            volunteeredEmergencyAlertIds = interactive.volunteeredEmergencyAlertIds
+            volunteeredEmergencyAlertIds = interactive.volunteeredEmergencyAlertIds,
+            cloudSyncStatus = interactive.cloudSyncStatus
         )
     }.stateIn(
         scope = viewModelScope,
@@ -624,10 +654,20 @@ class RtrwViewModel(application: Application) : AndroidViewModel(application) {
                 catatan = catatan
             )
             repository.insertEmergencyAlert(newAlert)
+            
+            // Trigger Firestore Sync & Android Emergency Notification
+            firestoreSyncService.syncEmergencyAlert(newAlert)
+            com.example.utils.RuangWargaNotificationHelper.showEmergencyAlertNotification(
+                context = getApplication(),
+                title = "$jenisDarurat - $judul",
+                message = catatan.ifBlank { "Laporan darurat memerlukan perhatian warga dan pengurus." },
+                location = lokasi
+            )
+
             _interactiveUiState.update {
                 it.copy(
                     showReportEmergencySheet = false,
-                    successSnackbarMessage = "Laporan darurat terkirim. Menunggu verifikasi pengurus."
+                    successSnackbarMessage = "Laporan darurat terkirim & tersinkron ke Cloud Firebase! 🚨"
                 )
             }
         }

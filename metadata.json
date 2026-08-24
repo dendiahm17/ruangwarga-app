@@ -2,5 +2,5 @@
   "name": "ruangwarga-app",
   "description": "Aplikasi Layanan Digital Warga RT/RW untuk Pengajuan Surat, Pembayaran Iuran, Pengaduan Lingkungan, Pengumuman, dan Manajemen Data Warga.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": []
 }

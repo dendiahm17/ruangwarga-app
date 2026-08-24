@@ -266,7 +266,8 @@ fun BukuKasBottomSheet(
                 }
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Action: Catat Transaksi
+                // Action: Catat Transaksi & Export PDF
+                val context = androidx.compose.ui.platform.LocalContext.current
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -278,17 +279,51 @@ fun BukuKasBottomSheet(
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
                     )
-                    Button(
-                        onClick = onOpenAddTransaction,
-                        colors = ButtonDefaults.buttonColors(containerColor = AccentRed),
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier
-                            .height(36.dp)
-                            .testTag("btn_tambah_transaksi_kas")
-                    ) {
-                        Icon(imageVector = Icons.Default.Add, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(text = "Catat Transaksi", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        androidx.compose.material3.OutlinedButton(
+                            onClick = {
+                                val pdfFile = com.example.utils.DocumentPdfGenerator.generateCashReportPdf(
+                                    context = context,
+                                    cashRecords = transactions,
+                                    totalSaldo = saldoKas,
+                                    totalMasuk = totalPemasukan,
+                                    totalKeluar = totalPengeluaran
+                                )
+                                if (pdfFile != null) {
+                                    com.example.utils.DocumentPdfGenerator.openOrSharePdf(
+                                        context,
+                                        pdfFile,
+                                        "Laporan Buku Kas RW 02"
+                                    )
+                                } else {
+                                    android.widget.Toast.makeText(context, "Gagal membuat PDF Kas", android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.height(36.dp)
+                        ) {
+                            Icon(
+                                imageVector = androidx.compose.material.icons.filled.Payments,
+                                contentDescription = null,
+                                tint = PrimaryBlue,
+                                modifier = Modifier.size(15.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(text = "Ekspor PDF", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = PrimaryBlue)
+                        }
+
+                        Button(
+                            onClick = onOpenAddTransaction,
+                            colors = ButtonDefaults.buttonColors(containerColor = AccentRed),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier
+                                .height(36.dp)
+                                .testTag("btn_tambah_transaksi_kas")
+                        ) {
+                            Icon(imageVector = Icons.Default.Add, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(text = "Catat", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.height(10.dp))

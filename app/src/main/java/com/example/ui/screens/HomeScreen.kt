@@ -148,13 +148,30 @@ fun HomeScreen(
                             color = PrimaryGreenDark
                         )
                     }
-                    Spacer(modifier = Modifier.height(1.dp))
-                    Text(
-                        text = "RT 03 / RW 02",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = TextSecondary
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable { viewModel.syncAllDataToCloud() }
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(7.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    when (uiState.cloudSyncStatus) {
+                                        "Tersinkronisasi ke Cloud" -> AccentGreen
+                                        "Menyinkronkan..." -> AccentOrange
+                                        else -> Color.Gray
+                                    }
+                                )
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "RT 03 / RW 02 • ${uiState.cloudSyncStatus}",
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = TextSecondary
+                        )
+                    }
                 }
 
                 // Right Header Icons: Kotak Masuk (Mail Icon) & Darurat (Red Siren) - Tanpa Label

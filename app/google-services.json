@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "542145068128",
+    "project_id": "ruangwarga-app",
+    "storage_bucket": "ruangwarga-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:542145068128:android:c5c235dac73013c45b5705",
+        "android_client_info": {
+          "package_name": "com.ruangwarga.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC3hWhJn5ufEHm64Y2bChgweIKU_QmWNkg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
