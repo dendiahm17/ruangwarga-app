@@ -381,18 +381,21 @@ class RtrwViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _interactiveUiState.update { it.copy(cloudSyncStatus = "Menyinkronkan...") }
             try {
-                // Background sync all active letters & alerts
+                val currentProfile = repository.getCurrentProfile()
+                if (currentProfile != null) {
+                    firestoreSyncService.syncProfile(currentProfile)
+                }
                 _interactiveUiState.update { 
                     it.copy(
                         cloudSyncStatus = "Tersinkronisasi ke Cloud",
-                        successSnackbarMessage = "Data aplikasi berhasil disinkronkan ke Firebase Cloud! ☁️"
+                        successSnackbarMessage = "Data profil berhasil diunggah ke Firebase Cloud! ☁️"
                     ) 
                 }
             } catch (e: Exception) {
                 _interactiveUiState.update { 
                     it.copy(
                         cloudSyncStatus = "Mode Offline",
-                        successSnackbarMessage = "Gagal menyinkronkan data, berjalan dalam mode offline."
+                        successSnackbarMessage = "Gagal menyinkronkan: ${e.message}"
                     ) 
                 }
             }

@@ -20,6 +20,34 @@ class FirestoreSyncService(
         private const val COL_CASH_TRANSACTIONS = "cash_transactions"
         private const val COL_EMERGENCY_ALERTS = "emergency_alerts"
         private const val COL_ANNOUNCEMENTS = "announcements"
+        private const val COL_USERS = "users"
+    }
+
+    // 0. Sinkronisasi Data Profil Warga
+    suspend fun syncProfile(profile: com.example.data.model.ResidentProfileEntity): Boolean {
+        return try {
+            val docId = profile.telepon.ifBlank { profile.uid.ifBlank { "user_1" } }
+            val data = hashMapOf(
+                "uid" to profile.uid,
+                "nama" to profile.nama,
+                "nik" to profile.nik,
+                "noKk" to profile.noKk,
+                "telepon" to profile.telepon,
+                "rt" to profile.rt,
+                "rw" to profile.rw,
+                "alamat" to profile.alamat,
+                "pekerjaan" to profile.pekerjaan,
+                "email" to profile.email,
+                "role" to profile.role,
+                "updatedAt" to System.currentTimeMillis()
+            )
+            firestore.collection(COL_USERS).document(docId).set(data, SetOptions.merge()).await()
+            Log.d(TAG, "Profile synced successfully: $docId")
+            true
+        } catch (e: Exception) {
+            Log.e(TAG, "Error syncing profile: ${e.message}", e)
+            false
+        }
     }
 
     // 1. Sinkronisasi Surat Pengantar

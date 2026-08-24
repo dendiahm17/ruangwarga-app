@@ -25,6 +25,10 @@ import kotlinx.coroutines.flow.firstOrNull
 class RtrwRepository(private val db: AppDatabase) {
 
     val profile: Flow<ResidentProfileEntity?> = db.residentProfileDao().getProfile()
+
+    suspend fun getCurrentProfile(): ResidentProfileEntity? {
+        return db.residentProfileDao().getCurrentProfileDirect()
+    }
     val familyMembers: Flow<List<FamilyMemberEntity>> = db.familyMemberDao().getFamilyMembers()
     val letters: Flow<List<LetterRequestEntity>> = db.letterRequestDao().getAllLetters()
     val dues: Flow<List<DuesRecordEntity>> = db.duesRecordDao().getAllDues()

@@ -112,6 +112,7 @@ class AuthRepository(private val db: AppDatabase) {
 
             // Sinkronkan ke Firestore
             try {
+                val docId = profile.telepon.ifBlank { profile.uid }
                 val firestoreData = hashMapOf(
                     "uid" to profile.uid,
                     "nama" to profile.nama,
@@ -126,9 +127,11 @@ class AuthRepository(private val db: AppDatabase) {
                     "role" to profile.role,
                     "lastLogin" to System.currentTimeMillis()
                 )
-                firestore.collection("users").document(profile.uid).set(firestoreData)
-            } catch (_: Exception) {
-                // Offline fallback
+                android.util.Log.d("RuangWargaAuth", "Sinkronisasi user baru ke Firestore users/$docId")
+                firestore.collection("users").document(docId).set(firestoreData).await()
+                android.util.Log.d("RuangWargaAuth", "Sukses sinkronisasi user baru ke Firestore!")
+            } catch (e: Exception) {
+                android.util.Log.e("RuangWargaAuth", "Gagal sinkron user baru ke Firestore: ${e.message}", e)
             }
 
             Result.success(profile)
