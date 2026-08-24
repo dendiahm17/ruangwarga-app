@@ -113,6 +113,7 @@ import com.example.ui.theme.AccentPurpleLight
 import com.example.ui.theme.AccentRed
 import com.example.ui.theme.AccentRedLight
 import com.example.ui.theme.BorderLight
+import com.example.ui.theme.PrimaryGreenDark
 import com.example.ui.theme.PrimaryBlue
 import com.example.ui.theme.PrimaryBlueDark
 import com.example.ui.theme.PrimaryBlueLight
@@ -1967,9 +1968,14 @@ fun PersonalDataBottomSheet(
     var email by remember { mutableStateOf(profile.email) }
     var pekerjaan by remember { mutableStateOf(profile.pekerjaan) }
 
+    var rt by remember { mutableStateOf(profile.rt.ifBlank { "RT 01" }) }
+    var rw by remember { mutableStateOf(profile.rw.ifBlank { "RW 01" }) }
+    var role by remember { mutableStateOf(profile.role.ifBlank { "Warga" }) }
+    var roleExpanded by remember { mutableStateOf(false) }
+
     val isNikValid = nik.length == 16 && nik.all { it.isDigit() }
     val isNoKkValid = noKk.length == 16 && noKk.all { it.isDigit() }
-    val isTeleponValid = telepon.length >= 10
+    val isTeleponValid = telepon.length >= 8
     val isNamaValid = nama.trim().isNotBlank()
     val isValid = isNikValid && isNoKkValid && isTeleponValid && isNamaValid
 
@@ -1978,7 +1984,7 @@ fun PersonalDataBottomSheet(
         Column(
             modifier = Modifier.fillMaxSize()
                 .background(Color.White)
-                .padding(horizontal = 24.dp, vertical = 12.dp)
+                .padding(horizontal = 24.dp, vertical = 16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
             Row(
@@ -1986,23 +1992,31 @@ fun PersonalDataBottomSheet(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "Ubah Data Diri Warga",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary
-                )
+                Column {
+                    Text(
+                        text = "Lengkapi Data Kependudukan",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                    Text(
+                        text = "Data resmi identitas warga di sistem RT/RW",
+                        fontSize = 11.5.sp,
+                        color = TextSecondary
+                    )
+                }
                 IconButton(onClick = onDismiss) {
                     Icon(imageVector = Icons.Default.Close, contentDescription = "Tutup", tint = TextSecondary)
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             Text(text = "Nama Lengkap *", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
             OutlinedTextField(
                 value = nama,
                 onValueChange = { nama = it },
+                placeholder = { Text("Contoh: Budi Santoso") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(10.dp)
             )
@@ -2012,6 +2026,7 @@ fun PersonalDataBottomSheet(
             OutlinedTextField(
                 value = nik,
                 onValueChange = { if (it.length <= 16) nik = it },
+                placeholder = { Text("3275xxxxxxxxxxxx") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 isError = nik.isNotBlank() && !isNikValid,
                 supportingText = {
@@ -2028,6 +2043,7 @@ fun PersonalDataBottomSheet(
             OutlinedTextField(
                 value = noKk,
                 onValueChange = { if (it.length <= 16) noKk = it },
+                placeholder = { Text("3275xxxxxxxxxxxx") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 isError = noKk.isNotBlank() && !isNoKkValid,
                 supportingText = {
@@ -2040,10 +2056,39 @@ fun PersonalDataBottomSheet(
             )
             Spacer(modifier = Modifier.height(10.dp))
 
-            Text(text = "Alamat Lengkap *", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+            // RT & RW
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = "RT *", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+                    OutlinedTextField(
+                        value = rt,
+                        onValueChange = { rt = it },
+                        placeholder = { Text("RT 01") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = "RW *", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+                    OutlinedTextField(
+                        value = rw,
+                        onValueChange = { rw = it },
+                        placeholder = { Text("RW 01") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(text = "Alamat Rumah (Blok / No) *", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
             OutlinedTextField(
                 value = alamat,
                 onValueChange = { alamat = it },
+                placeholder = { Text("Jl. Melati Blok C No. 12") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(10.dp)
             )
@@ -2060,22 +2105,45 @@ fun PersonalDataBottomSheet(
             )
             Spacer(modifier = Modifier.height(10.dp))
 
-            Text(text = "Email", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+            Text(text = "Pekerjaan", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
             OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
+                value = pekerjaan,
+                onValueChange = { pekerjaan = it },
+                placeholder = { Text("Karyawan Swasta / Wiraswasta / PNS") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(10.dp)
             )
             Spacer(modifier = Modifier.height(10.dp))
 
-            Text(text = "Pekerjaan", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
-            OutlinedTextField(
-                value = pekerjaan,
-                onValueChange = { pekerjaan = it },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(10.dp)
-            )
+            Text(text = "Peran / Jabatan", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+            ExposedDropdownMenuBox(
+                expanded = roleExpanded,
+                onExpandedChange = { roleExpanded = !roleExpanded },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedTextField(
+                    value = role,
+                    onValueChange = {},
+                    readOnly = true,
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = roleExpanded) },
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth().menuAnchor()
+                )
+                ExposedDropdownMenu(
+                    expanded = roleExpanded,
+                    onDismissRequest = { roleExpanded = false }
+                ) {
+                    listOf("Warga", "Ketua RT", "Ketua RW", "Sekretaris RT/RW", "Bendahara RT/RW", "Seksi Keamanan").forEach { r ->
+                        DropdownMenuItem(
+                            text = { Text(r) },
+                            onClick = {
+                                role = r
+                                roleExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -2087,21 +2155,25 @@ fun PersonalDataBottomSheet(
                                 nama = nama.trim(),
                                 nik = nik.trim(),
                                 noKk = noKk.trim(),
+                                rt = rt.trim(),
+                                rw = rw.trim(),
                                 alamat = alamat.trim(),
                                 telepon = telepon.trim(),
                                 email = email.trim(),
-                                pekerjaan = pekerjaan.trim()
+                                pekerjaan = pekerjaan.trim(),
+                                role = role
                             )
                         )
                     }
                 },
                 enabled = isValid,
-                colors = ButtonDefaults.buttonColors(containerColor = AccentRed), shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreenDark),
+                shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
             ) {
-                Text(text = "Simpan Perubahan", fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                Text(text = "Simpan Data Kependudukan", fontSize = 14.sp, fontWeight = FontWeight.Bold)
             }
 
             Spacer(modifier = Modifier.height(32.dp))

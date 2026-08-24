@@ -223,6 +223,57 @@ fun HomeScreen(
         }
 
         // ============================================================
+        // BANNER LENGKAPI DATA KEPENDUDUKAN (Jika Warga Baru Belum Isi NIK/Nama)
+        // ============================================================
+        if (uiState.profile.nama.isBlank() || uiState.profile.nik.isBlank()) {
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .shadow(3.dp, RoundedCornerShape(16.dp), spotColor = Color(0x15000000))
+                        .clickable { viewModel.openPersonalDataSheet() },
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFEFF6FF)),
+                    border = BorderStroke(1.2.dp, Color(0xFFBFDBFE))
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFDBEAFE)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = "📋", fontSize = 18.sp)
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Lengkapi Data Kependudukan Anda",
+                                fontSize = 13.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF1E40AF)
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Isi NIK, No. KK & Alamat untuk mengaktifkan seluruh layanan RT/RW →",
+                                fontSize = 11.sp,
+                                color = Color(0xFF3B82F6)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // ============================================================
         // 2. KARTU INFORMASI PESAN DARURAT WARGA (Tampil Ringkas: Judul & Pesan Pemicu Klik ke Detail)
         // ============================================================
         val activeAlert = uiState.emergencyAlerts.firstOrNull { it.status == "Aktif" }

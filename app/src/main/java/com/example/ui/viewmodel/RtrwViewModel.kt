@@ -278,105 +278,88 @@ class RtrwViewModel(application: Application) : AndroidViewModel(application) {
         val database = AppDatabase.getDatabase(application)
         repository = RtrwRepository(database)
         authRepository = com.example.data.repository.AuthRepository(database)
-        
-        val isAlreadyLoggedIn = authRepository.isUserLoggedIn()
-        _interactiveUiState.value = InteractiveUiState(isLoggedIn = isAlreadyLoggedIn)
+        _interactiveUiState.value = InteractiveUiState()
         
         // Buat notification channels sistem
         com.example.utils.RuangWargaNotificationHelper.createNotificationChannels(application)
 
         viewModelScope.launch {
             repository.seedInitialDataIfEmpty()
-            if (isAlreadyLoggedIn) {
-                authRepository.reloadProfileFromCloud()
-            }
+            val isAlreadyLoggedIn = authRepository.isUserLoggedIn()
+            _interactiveUiState.update { it.copy(isLoggedIn = isAlreadyLoggedIn) }
         }
     }
 
-    fun setAuthMode(mode: String) {
-        _interactiveUiState.update { it.copy(authMode = mode, authErrorMessage = null) }
-    }
-
-    fun login(email: String, pass: String) {
-        if (email.isBlank() || pass.isBlank()) {
-            _interactiveUiState.update { it.copy(authErrorMessage = "Email dan password wajib diisi.") }
+    fun requestOtp(phoneNumber: String) {
+        if (phoneNumber.isBlank()) {
+            _interactiveUiState.update { it.copy(authErrorMessage = "Nomor HP / WhatsApp wajib diisi.") }
             return
         }
         viewModelScope.launch {
             _interactiveUiState.update { it.copy(isAuthLoading = true, authErrorMessage = null) }
-            val result = authRepository.login(email, pass)
-            result.onSuccess { profile ->
+            val result = authRepository.requestOtp(phoneNumber)
+            result.onSuccess { otpCode ->
                 _interactiveUiState.update {
                     it.copy(
-                        isLoggedIn = true,
                         isAuthLoading = false,
                         authErrorMessage = null,
-                        successSnackbarMessage = "Selamat datang kembali, ${profile.nama.ifBlank { "Warga" }}! 👋"
+                        authMode = "OTP_VERIFY",
+                        successSnackbarMessage = "Kode OTP berhasil dikirim! (Demo OTP: $otpCode)"
                     )
                 }
             }.onFailure { error ->
                 _interactiveUiState.update {
                     it.copy(
                         isAuthLoading = false,
-                        authErrorMessage = error.localizedMessage ?: "Login gagal. Cek kembali email & password Anda."
+                        authErrorMessage = error.localizedMessage ?: "Gagal mengirim OTP. Periksa nomor HP Anda."
                     )
                 }
             }
         }
     }
 
-    fun register(
-        email: String,
-        pass: String,
-        nama: String,
-        nik: String,
-        noKk: String,
-        telepon: String,
-        rt: String,
-        rw: String,
-        alamat: String,
-        pekerjaan: String,
-        role: String
-    ) {
-        if (email.isBlank() || pass.isBlank() || nama.isBlank()) {
-            _interactiveUiState.update { it.copy(authErrorMessage = "Nama, email, dan password wajib diisi.") }
-            return
-        }
-        if (pass.length < 6) {
-            _interactiveUiState.update { it.copy(authErrorMessage = "Password minimal 6 karakter.") }
+    fun verifyOtp(phoneNumber: String, otpCode: String) {
+        if (otpCode.length < 6) {
+            _interactiveUiState.update { it.copy(authErrorMessage = "Masukkan 6 digit kode OTP.") }
             return
         }
         viewModelScope.launch {
             _interactiveUiState.update { it.copy(isAuthLoading = true, authErrorMessage = null) }
-            val result = authRepository.register(
-                email = email,
-                password = pass,
-                nama = nama,
-                nik = nik,
-                noKk = noKk,
-                telepon = telepon,
-                rt = rt,
-                rw = rw,
-                alamat = alamat,
-                pekerjaan = pekerjaan,
-                role = role
-            )
+            val result = authRepository.verifyOtp(phoneNumber, otpCode)
             result.onSuccess { profile ->
+                val isNewUser = profile.nama.isBlank() || profile.nik.isBlank()
                 _interactiveUiState.update {
                     it.copy(
                         isLoggedIn = true,
                         isAuthLoading = false,
                         authErrorMessage = null,
-                        successSnackbarMessage = "Pendaftaran akun ${profile.nama} berhasil! Selamat bergabung di RuangWarga 🎉"
+                        authMode = "LOGIN",
+                        showPersonalDataSheet = isNewUser, // Otomatis tawarkan lengkapi data jika warga baru
+                        successSnackbarMessage = if (isNewUser) 
+                            "Selamat datang! Silakan lengkapi data kependudukan Anda 👋" 
+                        else 
+                            "Selamat datang kembali, ${profile.nama}! 👋"
                     )
                 }
             }.onFailure { error ->
                 _interactiveUiState.update {
                     it.copy(
                         isAuthLoading = false,
-                        authErrorMessage = error.localizedMessage ?: "Pendaftaran gagal. Silakan coba lagi."
+                        authErrorMessage = error.localizedMessage ?: "Kode OTP tidak valid."
                     )
                 }
+            }
+        }
+    }
+
+    fun updatePersonalData(updatedProfile: ResidentProfileEntity) {
+        viewModelScope.launch {
+            authRepository.saveCompleteProfile(updatedProfile)
+            _interactiveUiState.update {
+                it.copy(
+                    showPersonalDataSheet = false,
+                    successSnackbarMessage = "Data diri berhasil disimpan dan disinkronkan!"
+                )
             }
         }
     }
@@ -1003,9 +986,10 @@ class RtrwViewModel(application: Application) : AndroidViewModel(application) {
     fun updateProfile(profile: ResidentProfileEntity) {
         viewModelScope.launch {
             repository.updateProfile(profile)
+            authRepository.saveCompleteProfile(profile)
             closePersonalDataSheet()
             _interactiveUiState.update {
-                it.copy(successSnackbarMessage = "Data profil berhasil diperbarui!")
+                it.copy(successSnackbarMessage = "Data kependudukan berhasil disimpan dan disinkronkan!")
             }
         }
     }

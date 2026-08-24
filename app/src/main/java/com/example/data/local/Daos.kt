@@ -30,6 +30,9 @@ interface ResidentProfileDao {
     @Query("SELECT * FROM resident_profile WHERE id = 1 LIMIT 1")
     fun getProfile(): Flow<ResidentProfileEntity?>
 
+    @Query("SELECT * FROM resident_profile WHERE id = 1 LIMIT 1")
+    suspend fun getCurrentProfileDirect(): ResidentProfileEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrUpdateProfile(profile: ResidentProfileEntity)
 
