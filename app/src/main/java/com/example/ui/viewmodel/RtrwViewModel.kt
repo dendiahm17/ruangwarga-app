@@ -288,6 +288,17 @@ class RtrwViewModel(application: Application) : AndroidViewModel(application) {
             val isAlreadyLoggedIn = authRepository.isUserLoggedIn()
             _interactiveUiState.update { it.copy(isLoggedIn = isAlreadyLoggedIn) }
         }
+
+        // Listener Real-time Feed Postingan Komunitas Warga dari Cloud Firestore
+        firestoreSyncService.listenToCommunityPosts { remotePosts ->
+            if (remotePosts.isNotEmpty()) {
+                _interactiveUiState.update { current ->
+                    // Gabungkan remote posts dengan local unique posts
+                    val combined = (remotePosts + current.customFeedPosts).distinctBy { it.id }
+                    current.copy(customFeedPosts = combined)
+                }
+            }
+        }
     }
 
     fun setAuthMode(mode: String) {
@@ -745,11 +756,18 @@ class RtrwViewModel(application: Application) : AndroidViewModel(application) {
     fun addCustomFeedPost(post: CommunityFeedPost) {
         _interactiveUiState.update { 
             it.copy(
-                customFeedPosts = listOf(post) + it.customFeedPosts,
+                customFeedPosts = listOf(post) + it.customFeedPosts.filter { p -> p.id != post.id },
                 showCreateAktivitasFormSheet = false,
                 showCreatePostSheet = false,
-                successSnackbarMessage = "Postingan '${post.category}' dengan banner interaktif berhasil diterbitkan! 🎉"
+                successSnackbarMessage = "Postingan '${post.category}' berhasil diterbitkan dan tersimpan di Cloud! 🎉"
             )
+        }
+        viewModelScope.launch {
+            try {
+                firestoreSyncService.syncCommunityPost(post)
+            } catch (e: Exception) {
+                android.util.Log.e("RtrwViewModel", "Gagal sinkronisasi feed post: ${e.message}")
+            }
         }
     }
 

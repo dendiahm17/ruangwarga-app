@@ -658,7 +658,15 @@ fun MainApp(
                     type = uiState.selectedAktivitasTypeForCreate,
                     onDismiss = { viewModel.closeCreateAktivitasFormSheet() },
                     onSubmit = { post ->
-                        viewModel.addCustomFeedPost(post)
+                        val currentName = uiState.profile.nama.ifBlank { "Warga Lingkungan" }
+                        val currentRole = uiState.profile.role.ifBlank { "Warga" }
+                        val currentRtRw = "${uiState.profile.rt} / ${uiState.profile.rw}"
+                        val enrichedPost = post.copy(
+                            authorName = currentName,
+                            authorRole = "$currentRole ${uiState.profile.rt}",
+                            authorRtRw = currentRtRw
+                        )
+                        viewModel.addCustomFeedPost(enrichedPost)
                     }
                 )
             }
