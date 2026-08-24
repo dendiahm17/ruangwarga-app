@@ -140,7 +140,9 @@ class AuthRepository(private val db: AppDatabase) {
     suspend fun saveCompleteProfile(profile: ResidentProfileEntity): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             db.residentProfileDao().insertOrUpdateProfile(profile)
+            // Simpan ke Firestore dan tunggu sampai berhasil
             try {
+                val docId = profile.telepon.ifBlank { profile.uid }
                 val firestoreData = hashMapOf(
                     "uid" to profile.uid,
                     "nama" to profile.nama,
@@ -155,9 +157,11 @@ class AuthRepository(private val db: AppDatabase) {
                     "role" to profile.role,
                     "updatedAt" to System.currentTimeMillis()
                 )
-                firestore.collection("users").document(profile.uid).set(firestoreData)
-            } catch (_: Exception) {
-                // Ignore if offline
+                android.util.Log.d("RuangWargaAuth", "Mengunggah data profil ke Firestore users/$docId: $firestoreData")
+                firestore.collection("users").document(docId).set(firestoreData).await()
+                android.util.Log.d("RuangWargaAuth", "Berhasil mengunggah profil ke Firestore!")
+            } catch (e: Exception) {
+                android.util.Log.e("RuangWargaAuth", "Gagal mengunggah profil ke Firestore: ${e.message}", e)
             }
             Result.success(Unit)
         } catch (e: Exception) {
