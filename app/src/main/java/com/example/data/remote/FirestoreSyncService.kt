@@ -106,13 +106,14 @@ class FirestoreSyncService(
                 "jenisDarurat" to alert.jenisDarurat,
                 "judul" to alert.judul,
                 "lokasi" to alert.lokasi,
-                "deskripsi" to alert.deskripsi,
+                "kontak" to alert.kontak,
+                "tingkatPrioritas" to alert.tingkatPrioritas,
                 "status" to alert.status,
                 "waktu" to alert.waktu,
-                "tanggal" to alert.tanggal,
                 "pelapor" to alert.pelapor,
-                "jumlahRelawan" to alert.jumlahRelawan,
-                "relawanList" to alert.relawanList,
+                "instruksi" to alert.instruksi,
+                "catatan" to alert.catatan,
+                "isVerified" to alert.isVerified,
                 "updatedAt" to System.currentTimeMillis()
             )
             firestore.collection(COL_EMERGENCY_ALERTS).document(docId).set(data, SetOptions.merge()).await()

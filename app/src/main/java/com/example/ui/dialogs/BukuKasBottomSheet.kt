@@ -303,7 +303,7 @@ fun BukuKasBottomSheet(
                             modifier = Modifier.height(36.dp)
                         ) {
                             Icon(
-                                imageVector = androidx.compose.material.icons.filled.Payments,
+                                imageVector = Icons.Default.Payments,
                                 contentDescription = null,
                                 tint = PrimaryBlue,
                                 modifier = Modifier.size(15.dp)
