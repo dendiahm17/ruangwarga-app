@@ -101,6 +101,9 @@ fun AuthScreen(
     val isOtpStep = uiState.authMode == "OTP_VERIFY"
     val isRegister = uiState.authMode == "REGISTER"
 
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val activity = context as? android.app.Activity
+
     var resendCountdown by remember { mutableIntStateOf(60) }
     var isCountdownActive by remember { mutableStateOf(false) }
 
@@ -395,7 +398,9 @@ fun AuthScreen(
                                     fontWeight = FontWeight.Bold,
                                     color = if (!isCountdownActive) PrimaryGreenDark else Color.Gray,
                                     modifier = Modifier.clickable(enabled = !isCountdownActive) {
-                                        viewModel.requestOtp(phoneNumber)
+                                        if (activity != null) {
+                                            viewModel.requestOtp(activity, phoneNumber)
+                                        }
                                     }
                                 )
                             }
@@ -465,7 +470,11 @@ fun AuthScreen(
                             Spacer(modifier = Modifier.height(4.dp))
 
                             Button(
-                                onClick = { viewModel.requestOtp(phoneNumber) },
+                                onClick = { 
+                                    if (activity != null) {
+                                        viewModel.requestOtp(activity, phoneNumber) 
+                                    }
+                                },
                                 enabled = !uiState.isAuthLoading && phoneNumber.length >= 9,
                                 shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.buttonColors(
@@ -669,17 +678,20 @@ fun AuthScreen(
                             // Tombol Submit Pendaftaran
                             Button(
                                 onClick = {
-                                    viewModel.registerFullProfile(
-                                        nama = nama,
-                                        nik = nik,
-                                        noKk = noKk,
-                                        telepon = phoneNumber,
-                                        rt = rt,
-                                        rw = rw,
-                                        alamat = alamat,
-                                        pekerjaan = pekerjaan,
-                                        role = role
-                                    )
+                                    if (activity != null) {
+                                        viewModel.registerFullProfile(
+                                            activity = activity,
+                                            nama = nama,
+                                            nik = nik,
+                                            noKk = noKk,
+                                            telepon = phoneNumber,
+                                            rt = rt,
+                                            rw = rw,
+                                            alamat = alamat,
+                                            pekerjaan = pekerjaan,
+                                            role = role
+                                        )
+                                    }
                                 },
                                 enabled = !uiState.isAuthLoading && nama.isNotBlank() && phoneNumber.length >= 9 && nik.length == 16,
                                 shape = RoundedCornerShape(12.dp),

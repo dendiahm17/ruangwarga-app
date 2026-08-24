@@ -294,28 +294,28 @@ class RtrwViewModel(application: Application) : AndroidViewModel(application) {
         _interactiveUiState.update { it.copy(authMode = mode, authErrorMessage = null) }
     }
 
-    fun requestOtp(phoneNumber: String) {
+    fun requestOtp(activity: android.app.Activity, phoneNumber: String) {
         if (phoneNumber.isBlank()) {
             _interactiveUiState.update { it.copy(authErrorMessage = "Nomor WhatsApp / HP wajib diisi.") }
             return
         }
         viewModelScope.launch {
             _interactiveUiState.update { it.copy(isAuthLoading = true, authErrorMessage = null) }
-            val result = authRepository.requestOtp(phoneNumber)
-            result.onSuccess { otpCode ->
+            val result = authRepository.sendFirebaseSmsOtp(activity, phoneNumber)
+            result.onSuccess {
                 _interactiveUiState.update {
                     it.copy(
                         isAuthLoading = false,
                         authErrorMessage = null,
                         authMode = "OTP_VERIFY",
-                        successSnackbarMessage = "Kode OTP berhasil dibuat! (Demo Code: $otpCode)"
+                        successSnackbarMessage = "SMS kode OTP Firebase sedang dikirim ke ponsel Anda 📩"
                     )
                 }
             }.onFailure { error ->
                 _interactiveUiState.update {
                     it.copy(
                         isAuthLoading = false,
-                        authErrorMessage = error.localizedMessage ?: "Gagal mengirim OTP. Periksa nomor HP Anda."
+                        authErrorMessage = error.localizedMessage ?: "Gagal mengirim SMS OTP. Pastikan nomor HP Anda benar."
                     )
                 }
             }
@@ -329,7 +329,7 @@ class RtrwViewModel(application: Application) : AndroidViewModel(application) {
         }
         viewModelScope.launch {
             _interactiveUiState.update { it.copy(isAuthLoading = true, authErrorMessage = null) }
-            val result = authRepository.verifyOtp(phoneNumber, otpCode)
+            val result = authRepository.verifyFirebaseSmsOtp(phoneNumber, otpCode)
             result.onSuccess { profile ->
                 val isNewUser = profile.nama.isBlank() || profile.nik.isBlank()
                 _interactiveUiState.update {
@@ -340,7 +340,7 @@ class RtrwViewModel(application: Application) : AndroidViewModel(application) {
                         authMode = "LOGIN",
                         showPersonalDataSheet = isNewUser,
                         successSnackbarMessage = if (isNewUser) 
-                            "Selamat datang! Silakan lengkapi data kependudukan Anda 👋" 
+                            "Verifikasi nomor berhasil! Silakan lengkapi data kependudukan Anda 👋" 
                         else 
                             "Selamat datang kembali, ${profile.nama}! 👋"
                     )
@@ -349,7 +349,7 @@ class RtrwViewModel(application: Application) : AndroidViewModel(application) {
                 _interactiveUiState.update {
                     it.copy(
                         isAuthLoading = false,
-                        authErrorMessage = error.localizedMessage ?: "Kode OTP salah. Silakan coba lagi."
+                        authErrorMessage = error.localizedMessage ?: "Kode OTP salah atau kedaluwarsa."
                     )
                 }
             }
@@ -357,6 +357,7 @@ class RtrwViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun registerFullProfile(
+        activity: android.app.Activity,
         nama: String,
         nik: String,
         noKk: String,
@@ -374,6 +375,7 @@ class RtrwViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _interactiveUiState.update { it.copy(isAuthLoading = true, authErrorMessage = null) }
             val result = authRepository.registerFullProfile(
+                activity = activity,
                 nama = nama,
                 nik = nik,
                 noKk = noKk,
@@ -384,13 +386,13 @@ class RtrwViewModel(application: Application) : AndroidViewModel(application) {
                 pekerjaan = pekerjaan,
                 role = role
             )
-            result.onSuccess { otpCode ->
+            result.onSuccess {
                 _interactiveUiState.update {
                     it.copy(
                         isAuthLoading = false,
                         authErrorMessage = null,
                         authMode = "OTP_VERIFY",
-                        successSnackbarMessage = "Data tersimpan! Masukkan kode OTP untuk verifikasi HP (Demo: $otpCode)"
+                        successSnackbarMessage = "Data tersimpan! SMS kode OTP telah dikirim ke nomor HP Anda 📩"
                     )
                 }
             }.onFailure { error ->
