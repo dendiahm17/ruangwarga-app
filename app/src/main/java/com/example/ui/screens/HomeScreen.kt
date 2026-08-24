@@ -315,144 +315,69 @@ fun HomeScreen(
         }
 
         // ============================================================
-        // 3. KEGIATAN TERDEKAT CARD (Kerja Bakti RW 02 with Image & RSVP)
+        // 3. KEGIATAN TERDEKAT CARD (Dynamic Real Data)
         // ============================================================
-        item {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .shadow(3.dp, RoundedCornerShape(16.dp), spotColor = Color(0x15000000)),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = BorderStroke(1.dp, BorderLight)
-            ) {
-                Column(
+        if (nearestEvent != null) {
+            item {
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(14.dp)
+                        .shadow(3.dp, RoundedCornerShape(16.dp), spotColor = Color(0x15000000)),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    border = BorderStroke(1.dp, BorderLight)
                 ) {
-                    // Badge: Kegiatan Terdekat
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = Color(0xFFDCFCE7)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp)
                     ) {
-                        Text(
-                            text = "Kegiatan Terdekat",
-                            fontSize = 10.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = PrimaryGreenDark,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    Text(
-                        text = "Kerja Bakti RW 02",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary
-                    )
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    // Event Details (Date, Time, Location)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(text = "📅", fontSize = 12.sp)
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(text = "Minggu, 30 Agustus 2026", fontSize = 11.5.sp, color = TextSecondary)
-                            }
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(text = "⏱", fontSize = 12.sp)
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(text = "07.00 WIB", fontSize = 11.5.sp, color = TextSecondary)
-                            }
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(text = "📍", fontSize = 12.sp)
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(text = "Balai RW 02", fontSize = 11.5.sp, color = TextSecondary)
-                            }
-                        }
-
-                        // Illustration Graphic Placeholder (Emerald Scene)
-                        Box(
-                            modifier = Modifier
-                                .size(width = 95.dp, height = 75.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(
-                                    Brush.verticalGradient(
-                                        listOf(Color(0xFF86EFAC), Color(0xFF15803D))
-                                    )
-                                ),
-                            contentAlignment = Alignment.Center
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFFDCFCE7)
                         ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(text = "🧹🌿", fontSize = 22.sp)
-                                Text(text = "Gotong Royong", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                            }
+                            Text(
+                                text = "Kegiatan Terdekat",
+                                fontSize = 10.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = PrimaryGreenDark,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                            )
                         }
-                    }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
 
-                    // Bottom Row: Avatar Stack + "73 warga ikut" + Button "Saya Ikut"
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Row(horizontalArrangement = Arrangement.spacedBy((-6).dp)) {
-                                listOf(PrimaryGreen, AccentOrange, AccentPurple).forEach { color ->
-                                    Box(
-                                        modifier = Modifier
-                                            .size(20.dp)
-                                            .clip(CircleShape)
-                                            .background(color)
-                                            .border(1.dp, Color.White, CircleShape),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Person,
-                                            contentDescription = null,
-                                            tint = Color.White,
-                                            modifier = Modifier.size(11.dp)
-                                        )
-                                    }
+                        Text(
+                            text = nearestEvent.judul,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(text = "📅", fontSize = 12.sp)
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(text = nearestEvent.tanggal, fontSize = 11.5.sp, color = TextSecondary)
+                                }
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(text = "⏱", fontSize = 12.sp)
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(text = nearestEvent.waktu, fontSize = 11.5.sp, color = TextSecondary)
+                                }
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(text = "📍", fontSize = 12.sp)
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(text = nearestEvent.lokasi, fontSize = 11.5.sp, color = TextSecondary)
                                 }
                             }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "73 warga ikut",
-                                fontSize = 11.5.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = TextSecondary
-                            )
-                        }
-
-                        Button(
-                            onClick = {
-                                isParticipating = !isParticipating
-                                Toast.makeText(context, if (isParticipating) "Anda terdaftar ikut Kerja Bakti ✓" else "Partisipasi dibatalkan", Toast.LENGTH_SHORT).show()
-                            },
-                            shape = RoundedCornerShape(10.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isParticipating) Color(0xFFDCFCE7) else PrimaryGreenDark,
-                                contentColor = if (isParticipating) PrimaryGreenDark else Color.White
-                            ),
-                            modifier = Modifier.height(34.dp)
-                        ) {
-                            Text(
-                                text = if (isParticipating) "✓ Terdaftar" else "Saya Ikut",
-                                fontSize = 11.5.sp,
-                                fontWeight = FontWeight.Bold
-                            )
                         }
                     }
                 }
@@ -460,144 +385,121 @@ fun HomeScreen(
         }
 
         // ============================================================
-        // 4. UNTUK ANDA SECTION (Rapat RT 03 & Surat Domisili)
+        // 4. UNTUK ANDA SECTION (Surat/Pengumuman Terbaru Real)
         // ============================================================
-        item {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Row(
+        if (uiState.letters.isNotEmpty() || uiState.announcements.isNotEmpty()) {
+            item {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Untuk Anda",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+                        Text(
+                            text = "Lihat semua",
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = PrimaryGreenDark,
+                            modifier = Modifier
+                                .clickable { viewModel.selectTab(MainTab.AGENDA) }
+                                .padding(vertical = 2.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    uiState.letters.firstOrNull()?.let { latestLetter ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { viewModel.openSuratScreenSheet() },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F5F9))
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(30.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(Color(0xFFDCFCE7)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(text = "📄", fontSize = 14.sp)
+                                }
+
+                                Spacer(modifier = Modifier.width(10.dp))
+
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "${latestLetter.jenisSurat} - ${latestLetter.status}",
+                                        fontSize = 12.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TextPrimary
+                                    )
+                                    Text(
+                                        text = latestLetter.keperluan,
+                                        fontSize = 10.5.sp,
+                                        color = TextSecondary,
+                                        maxLines = 1
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // ============================================================
+        // 5. COMMUNITY POST FEED LIST (Dynamic Real Posts)
+        // ============================================================
+        if (uiState.customFeedPosts.isEmpty()) {
+            item {
+                Card(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    border = BorderStroke(1.dp, BorderLight)
                 ) {
-                    Text(
-                        text = "Untuk Anda",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary
-                    )
-
-                    Text(
-                        text = "Lihat semua",
-                        fontSize = 11.5.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = PrimaryGreenDark,
-                        modifier = Modifier
-                            .clickable { viewModel.selectTab(MainTab.AGENDA) }
-                            .padding(vertical = 2.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                // Card 1: Rapat RT 03 malam ini (Red Dot)
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { viewModel.selectTab(MainTab.AGENDA) },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F5F9))
-                ) {
-                    Row(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(30.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color(0xFFE0E7FF)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(text = "📅", fontSize = 14.sp)
-                        }
-
-                        Spacer(modifier = Modifier.width(10.dp))
-
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Rapat RT 03 malam ini",
-                                fontSize = 12.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = TextPrimary
-                            )
-                            Text(
-                                text = "19.30 WIB • Balai RT 03",
-                                fontSize = 10.5.sp,
-                                color = TextSecondary
-                            )
-                        }
-
-                        // Red Status Dot
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(AccentRed)
+                        Text(text = "📝", fontSize = 32.sp)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Belum Ada Postingan Warga",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
                         )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                // Card 2: Surat Anda sudah selesai (Green Dot)
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { viewModel.openSuratScreenSheet() },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F5F9))
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(30.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color(0xFFDCFCE7)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(text = "📄", fontSize = 14.sp)
-                        }
-
-                        Spacer(modifier = Modifier.width(10.dp))
-
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Surat Anda sudah selesai",
-                                fontSize = 12.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = TextPrimary
-                            )
-                            Text(
-                                text = "Surat Domisili",
-                                fontSize = 10.5.sp,
-                                color = TextSecondary
-                            )
-                        }
-
-                        // Green Status Dot
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(PrimaryGreen)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Gunakan tombol di atas untuk membuat kabar warga, usulan, atau kegiatan baru!",
+                            fontSize = 11.5.sp,
+                            color = TextSecondary,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
                         )
                     }
                 }
             }
         }
 
-        // ============================================================
-        // 5. COMMUNITY POST FEED LIST (Simulasi Beragam Postingan Warga)
-        // ============================================================
-
-        // Render Custom Posts yang baru dibuat oleh warga/pengurus dengan Template Banner
+        // Render Custom Posts yang dibuat oleh warga/pengurus
         items(uiState.customFeedPosts) { customPost ->
             val customTemplate = findBannerTemplateById(customPost.bannerTemplateId)
                 ?: getDefaultBannerTemplateForType(customPost.category)
@@ -724,661 +626,6 @@ fun HomeScreen(
                             Icon(imageVector = Icons.Default.Repeat, contentDescription = "Share", tint = TextSecondary, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(text = "Bantu Sebarkan", fontSize = 10.5.sp, color = TextSecondary)
-                        }
-                    }
-                }
-            }
-        }
-
-        // Post 1: Dokumentasi Kerja Bakti oleh Ketua RW 02
-        item {
-            val tpl1 = findBannerTemplateById("tpl_gotong_royong") ?: getDefaultBannerTemplateForType("Kegiatan")
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = BorderStroke(1.dp, BorderLight)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(14.dp)
-                ) {
-                    // Author Header
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(CircleShape)
-                                    .background(PrimaryGreenDark),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
-                            }
-
-                            Spacer(modifier = Modifier.width(10.dp))
-
-                            Column {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        text = "Pak Bambang (Ketua RW 02)",
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = TextPrimary
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(text = "👑", fontSize = 11.sp)
-                                }
-                                Text(
-                                    text = "2 jam lalu • Dokumentasi Kegiatan",
-                                    fontSize = 10.5.sp,
-                                    color = TextSecondary
-                                )
-                            }
-                        }
-
-                        IconButton(onClick = {}, modifier = Modifier.size(24.dp)) {
-                            Icon(imageVector = Icons.Default.MoreHoriz, contentDescription = null, tint = TextTertiary)
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // Interaktif Template Banner
-                    PostInteractiveBanner(
-                        template = tpl1,
-                        customTitle = "Laporan Selesai: Kerja Bakti Massal RW 02",
-                        height = 100
-                    )
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Text(
-                        text = "Kerja bakti pembersihan saluran air dan pemangkasan dahan pohon pagi ini telah selesai dengan lancar. Terima kasih banyak atas partisipasi 73 warga yang hadir guyub rukun! 🌿💚",
-                        fontSize = 12.5.sp,
-                        color = TextPrimary,
-                        lineHeight = 17.sp
-                    )
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // 3 Photos Grid
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        listOf("🧹 Saluran Air", "🌿 Potong Dahan", "🤝 Foto Bersama").forEach { tag ->
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(75.dp)
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(Color(0xFFE2E8F0)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text(text = "📸", fontSize = 16.sp)
-                                    Text(text = tag, fontSize = 8.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF334155))
-                                }
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Action Counters
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .clickable {
-                                    isLiked = !isLiked
-                                    likesCount += if (isLiked) 1 else -1
-                                }
-                                .padding(end = 18.dp)
-                        ) {
-                            Icon(
-                                imageVector = if (isLiked) Icons.Default.Favorite else Icons.Outlined.FavoriteBorder,
-                                contentDescription = "Like",
-                                tint = if (isLiked) AccentRed else TextSecondary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(text = "$likesCount", fontSize = 11.5.sp, color = TextSecondary)
-                        }
-
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .clickable { Toast.makeText(context, "Membuka 18 komentar warga", Toast.LENGTH_SHORT).show() }
-                                .padding(end = 18.dp)
-                        ) {
-                            Icon(imageVector = Icons.Outlined.ChatBubbleOutline, contentDescription = "Comment", tint = TextSecondary, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(text = "18", fontSize = 11.5.sp, color = TextSecondary)
-                        }
-
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.clickable { Toast.makeText(context, "Tautan postingan disalin", Toast.LENGTH_SHORT).show() }
-                        ) {
-                            Icon(imageVector = Icons.Default.Repeat, contentDescription = "Share", tint = TextSecondary, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(text = "5", fontSize = 11.5.sp, color = TextSecondary)
-                        }
-                    }
-                }
-            }
-        }
-
-        // Post 2: Polling Pos Kamling Baru oleh Pak RT 03
-        item {
-            var selectedPollOpt by remember { mutableStateOf<String?>(null) }
-            var pollVotesA by remember { mutableIntStateOf(24) }
-            var pollVotesB by remember { mutableIntStateOf(9) }
-            val tpl2 = findBannerTemplateById("tpl_polling_warga") ?: getDefaultBannerTemplateForType("Polling")
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = BorderStroke(1.dp, BorderLight)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(14.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(CircleShape)
-                                    .background(PrimaryGreen),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(text = "🗳️", fontSize = 16.sp)
-                            }
-
-                            Spacer(modifier = Modifier.width(10.dp))
-
-                            Column {
-                                Text(
-                                    text = "Pak Joko (Ketua RT 03)",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = TextPrimary
-                                )
-                                Text(
-                                    text = "4 jam lalu • Polling Musyawarah",
-                                    fontSize = 10.5.sp,
-                                    color = TextSecondary
-                                )
-                            }
-                        }
-
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = Color(0xFFEFF6FF)
-                        ) {
-                            Text(
-                                text = "Poling Aktif",
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = PrimaryBlue,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // Banner Template Polling
-                    PostInteractiveBanner(
-                        template = tpl2,
-                        customTitle = "Voting CCTV Pintar 360° Pos Kamling",
-                        height = 100
-                    )
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Text(
-                        text = "Menurut bapak/ibu sekalian, apakah perlu penambahan CCTV pintar 360° di gerbang utama Pos Kamling Blok C?",
-                        fontSize = 12.5.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = TextPrimary
-                    )
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // Opsi Poling A
-                    Surface(
-                        shape = RoundedCornerShape(10.dp),
-                        color = if (selectedPollOpt == "A") Color(0xFFDCFCE7) else Color(0xFFF8FAFC),
-                        border = BorderStroke(1.dp, if (selectedPollOpt == "A") PrimaryGreenDark else BorderLight),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                if (selectedPollOpt != "A") {
-                                    if (selectedPollOpt == "B") pollVotesB--
-                                    selectedPollOpt = "A"
-                                    pollVotesA++
-                                    Toast.makeText(context, "Pilihan Anda tercatat: Sangat Setuju", Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "A. Sangat Setuju (Tingkatkan Keamanan)",
-                                fontSize = 12.sp,
-                                fontWeight = if (selectedPollOpt == "A") FontWeight.Bold else FontWeight.Normal,
-                                color = if (selectedPollOpt == "A") PrimaryGreenDark else TextPrimary
-                            )
-                            Text(
-                                text = "$pollVotesA Suara",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = TextSecondary
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    // Opsi Poling B
-                    Surface(
-                        shape = RoundedCornerShape(10.dp),
-                        color = if (selectedPollOpt == "B") Color(0xFFDCFCE7) else Color(0xFFF8FAFC),
-                        border = BorderStroke(1.dp, if (selectedPollOpt == "B") PrimaryGreenDark else BorderLight),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                if (selectedPollOpt != "B") {
-                                    if (selectedPollOpt == "A") pollVotesA--
-                                    selectedPollOpt = "B"
-                                    pollVotesB++
-                                    Toast.makeText(context, "Pilihan Anda tercatat: Cukup Patroli Satpam", Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "B. Cukup Patroli Ronda Fisik",
-                                fontSize = 12.sp,
-                                fontWeight = if (selectedPollOpt == "B") FontWeight.Bold else FontWeight.Normal,
-                                color = if (selectedPollOpt == "B") PrimaryGreenDark else TextPrimary
-                            )
-                            Text(
-                                text = "$pollVotesB Suara",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = TextSecondary
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Text(
-                        text = "Total ${pollVotesA + pollVotesB} warga telah berpartisipasi • Ditutup besok malam",
-                        fontSize = 10.5.sp,
-                        color = TextSecondary
-                    )
-                }
-            }
-        }
-
-        // Post 3: Pengumuman Posyandu Balita & Lansia
-        item {
-            val tpl3 = findBannerTemplateById("tpl_posyandu") ?: getDefaultBannerTemplateForType("Pengumuman")
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = BorderStroke(1.dp, BorderLight)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(14.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(0xFFFCE7F3)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(text = "👶", fontSize = 16.sp)
-                            }
-
-                            Spacer(modifier = Modifier.width(10.dp))
-
-                            Column {
-                                Text(
-                                    text = "Ibu Ratna (Kader Posyandu Melati)",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = TextPrimary
-                                )
-                                Text(
-                                    text = "Kemarin 16.20 • Pengumuman Kesehatan",
-                                    fontSize = 10.5.sp,
-                                    color = TextSecondary
-                                )
-                            }
-                        }
-
-                        IconButton(onClick = {}, modifier = Modifier.size(24.dp)) {
-                            Icon(imageVector = Icons.Default.MoreHoriz, contentDescription = null, tint = TextTertiary)
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // Banner Template Posyandu
-                    PostInteractiveBanner(
-                        template = tpl3,
-                        customTitle = "Posyandu Balita & Lansia Melati",
-                        height = 100
-                    )
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Text(
-                        text = "Jadwal Posyandu Balita & Lansia Rutin bulan ini akan diadakan pada hari Rabu, 2 September 2026 di Balai Warga RT 03 mulai pukul 08.30 WIB. Tersedia imunisasi gratis dan vitamin A.",
-                        fontSize = 12.5.sp,
-                        color = TextPrimary,
-                        lineHeight = 17.sp
-                    )
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Surface(
-                        shape = RoundedCornerShape(10.dp),
-                        color = Color(0xFFFDF2F8),
-                        border = BorderStroke(1.dp, Color(0xFFFBCFE8)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(10.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(text = "🩺", fontSize = 16.sp)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column {
-                                Text(text = "Pemeriksaan Tensi & Tumbuh Kembang", fontSize = 11.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF9D174D))
-                                Text(text = "Gratis untuk seluruh warga RT 01 - RT 05", fontSize = 10.5.sp, color = Color(0xFFBE185D))
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 18.dp)) {
-                            Icon(imageVector = Icons.Default.Favorite, contentDescription = null, tint = AccentRed, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(text = "42", fontSize = 11.5.sp, color = TextSecondary)
-                        }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(imageVector = Icons.Outlined.ChatBubbleOutline, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(text = "7 Komentar", fontSize = 11.5.sp, color = TextSecondary)
-                        }
-                    }
-                }
-            }
-        }
-
-        // Post 4: Ide Warga Bank Sampah & Daur Ulang
-        item {
-            var ideLiked by remember { mutableStateOf(false) }
-            var ideLikes by remember { mutableIntStateOf(31) }
-            val tpl4 = findBannerTemplateById("tpl_bank_sampah") ?: getDefaultBannerTemplateForType("Usulan")
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = BorderStroke(1.dp, BorderLight)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(14.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(0xFFFEF3C7)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(text = "💡", fontSize = 16.sp)
-                            }
-
-                            Spacer(modifier = Modifier.width(10.dp))
-
-                            Column {
-                                Text(
-                                    text = "Rian Pratama (Warga Blok B2)",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = TextPrimary
-                                )
-                                Text(
-                                    text = "2 hari lalu • Usulan Inovasi",
-                                    fontSize = 10.5.sp,
-                                    color = TextSecondary
-                                )
-                            }
-                        }
-
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = Color(0xFFFEF3C7)
-                        ) {
-                            Text(
-                                text = "Ide Lingkungan",
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFFB45309),
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // Banner Template Bank Sampah
-                    PostInteractiveBanner(
-                        template = tpl4,
-                        customTitle = "Program Bank Sampah Mandiri RW 02",
-                        height = 100
-                    )
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Text(
-                        text = "Bagaimana jika kita membuat program 'Bank Sampah Digital RW 02'? Kardus dan botol plastik bekas bisa dikumpulkan setiap akhir pekan lalu hasil penjualannya masuk ke kas RT atau tabungan warga masing-masing.",
-                        fontSize = 12.5.sp,
-                        color = TextPrimary,
-                        lineHeight = 17.sp
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.clickable {
-                                ideLiked = !ideLiked
-                                ideLikes += if (ideLiked) 1 else -1
-                            }
-                        ) {
-                            Icon(
-                                imageVector = if (ideLiked) Icons.Default.Favorite else Icons.Outlined.FavoriteBorder,
-                                contentDescription = null,
-                                tint = if (ideLiked) AccentRed else TextSecondary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(text = "$ideLikes Dukungan Warga", fontSize = 11.5.sp, color = TextSecondary)
-                        }
-
-                        Text(
-                            text = "Ditinjau Pengurus ✓",
-                            fontSize = 10.5.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = PrimaryGreenDark
-                        )
-                    }
-                }
-            }
-        }
-
-        // Post 5: Laporan Siskamling Ronda Malam
-        item {
-            val tpl5 = findBannerTemplateById("tpl_siskamling_patroli") ?: getDefaultBannerTemplateForType("Kejadian")
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = BorderStroke(1.dp, BorderLight)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(14.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(0xFFEDE9FE)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(text = "🛡️", fontSize = 16.sp)
-                            }
-
-                            Spacer(modifier = Modifier.width(10.dp))
-
-                            Column {
-                                Text(
-                                    text = "Regu Ronda Malam (Pak Danu & Tim)",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = TextPrimary
-                                )
-                                Text(
-                                    text = "Tadi malam 03.15 • Laporan Keamanan",
-                                    fontSize = 10.5.sp,
-                                    color = TextSecondary
-                                )
-                            }
-                        }
-
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = Color(0xFFDCFCE7)
-                        ) {
-                            Text(
-                                text = "Aman Terkendali",
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF15803D),
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // Banner Template Siskamling
-                    PostInteractiveBanner(
-                        template = tpl5,
-                        customTitle = "Patroli Ronda Malam Putaran ke-3 Selesai",
-                        height = 100
-                    )
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Text(
-                        text = "Patroli siskamling putaran ke-3 telah dilaksanakan di seluruh perimeter Blok A sampai Blok D. Portal timur telah terkunci rapat dan situasi lingkungan aman tenang. Terima kasih kopi & snack dari warga Blok C!",
-                        fontSize = 12.5.sp,
-                        color = TextPrimary,
-                        lineHeight = 17.sp
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 18.dp)) {
-                            Icon(imageVector = Icons.Default.Favorite, contentDescription = null, tint = AccentRed, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(text = "56", fontSize = 11.5.sp, color = TextSecondary)
-                        }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(imageVector = Icons.Outlined.ChatBubbleOutline, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(text = "12 Komentar", fontSize = 11.5.sp, color = TextSecondary)
                         }
                     }
                 }
