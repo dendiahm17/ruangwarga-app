@@ -175,6 +175,15 @@ fun MainApp(
         )
     )
 
+    if (!uiState.isLoggedIn) {
+        com.example.ui.screens.auth.AuthScreen(
+            uiState = uiState,
+            viewModel = viewModel,
+            modifier = modifier
+        )
+        return
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         

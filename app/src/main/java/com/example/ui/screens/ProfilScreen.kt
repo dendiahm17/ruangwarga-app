@@ -51,6 +51,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -137,27 +138,35 @@ fun ProfilScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = uiState.profile.nama,
+                        text = uiState.profile.nama.ifBlank { "Warga RuangWarga" },
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
 
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
 
-                    Text(
-                        text = "Warga ${uiState.profile.rt} / ${uiState.profile.rw}",
-                        fontSize = 13.sp,
-                        color = Color.White.copy(alpha = 0.9f)
-                    )
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = Color.White.copy(alpha = 0.25f)
+                    ) {
+                        Text(
+                            text = "${uiState.profile.role} • ${uiState.profile.rt} / ${uiState.profile.rw}",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                        )
+                    }
 
-                    Spacer(modifier = Modifier.height(2.dp))
-
-                    Text(
-                        text = "No. KK: ${uiState.profile.noKk}",
-                        fontSize = 12.sp,
-                        color = Color.White.copy(alpha = 0.85f)
-                    )
+                    if (uiState.profile.nik.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "NIK: ${uiState.profile.nik}",
+                            fontSize = 11.5.sp,
+                            color = Color.White.copy(alpha = 0.85f)
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -266,6 +275,31 @@ fun ProfilScreen(
                     icon = Icons.Outlined.Info,
                     onClick = { viewModel.openAboutSheet() }
                 )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Tombol Keluar / Logout Akun
+                Button(
+                    onClick = { viewModel.logout() },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFEE2E2),
+                        contentColor = Color(0xFFDC2626)
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(text = "🚪", fontSize = 16.sp)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Keluar dari Akun",
+                            fontSize = 13.5.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(32.dp))
             }

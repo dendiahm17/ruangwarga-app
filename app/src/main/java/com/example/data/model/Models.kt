@@ -6,19 +6,21 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "resident_profile")
 data class ResidentProfileEntity(
     @PrimaryKey val id: Int = 1,
-    val nama: String = "Budi Santoso",
-    val rt: String = "RT 03",
-    val rw: String = "RW 02",
-    val noKk: String = "3275123456789001",
-    val nik: String = "3275081203890002",
-    val alamat: String = "Jl. Melati Blok C No. 12",
+    val uid: String = "",
+    val nama: String = "",
+    val rt: String = "RT 01",
+    val rw: String = "RW 01",
+    val noKk: String = "",
+    val nik: String = "",
+    val alamat: String = "",
     val statusKeluarga: String = "Kepala Keluarga",
-    val telepon: String = "0812-3456-7890",
-    val email: String = "budi.santoso@email.com",
-    val pekerjaan: String = "Karyawan Swasta",
+    val telepon: String = "",
+    val email: String = "",
+    val pekerjaan: String = "",
     val jenisKelamin: String = "Laki-laki",
     val agama: String = "Islam",
-    val statusPernikahan: String = "Kawin"
+    val statusPernikahan: String = "Kawin",
+    val role: String = "Warga" // "Warga", "Ketua RT", "Ketua RW", "Sekretaris", "Bendahara"
 )
 
 @Entity(tableName = "family_members")

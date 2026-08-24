@@ -101,7 +101,6 @@ data class RtrwUiState(
     val residents: List<ResidentDirectoryEntity> = emptyList(),
     val assets: List<AssetRwEntity> = emptyList(),
     val unreadNotifications: Int = 4,
-    val cloudSyncStatus: String = "Tersinkronisasi ke Cloud",
     val selectedTab: MainTab = MainTab.BERANDA,
     val suratFilter: String = "Semua",
     val pengaduanFilter: String = "Semua",
@@ -177,7 +176,12 @@ data class RtrwUiState(
     val adminTargetComplaint: ComplaintRecordEntity? = null,
     val successSnackbarMessage: String? = null,
     val customFeedPosts: List<CommunityFeedPost> = emptyList(),
-    val volunteeredEmergencyAlertIds: Set<Int> = emptySet()
+    val volunteeredEmergencyAlertIds: Set<Int> = emptySet(),
+    val cloudSyncStatus: String = "Tersinkronisasi ke Cloud",
+    val isLoggedIn: Boolean = false,
+    val isAuthLoading: Boolean = false,
+    val authErrorMessage: String? = null,
+    val authMode: String = "LOGIN" // "LOGIN" or "REGISTER"
 )
 
 data class InteractiveUiState(
@@ -257,24 +261,136 @@ data class InteractiveUiState(
     val successSnackbarMessage: String? = null,
     val customFeedPosts: List<CommunityFeedPost> = emptyList(),
     val volunteeredEmergencyAlertIds: Set<Int> = emptySet(),
-    val cloudSyncStatus: String = "Tersinkronisasi ke Cloud" // "Tersinkronisasi ke Cloud", "Menyinkronkan...", "Mode Offline"
+    val cloudSyncStatus: String = "Tersinkronisasi ke Cloud",
+    val isLoggedIn: Boolean = false,
+    val isAuthLoading: Boolean = false,
+    val authErrorMessage: String? = null,
+    val authMode: String = "LOGIN"
 )
 
 class RtrwViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: RtrwRepository
+    private val authRepository: com.example.data.repository.AuthRepository
     private val firestoreSyncService = com.example.data.remote.FirestoreSyncService()
     private val _interactiveUiState = MutableStateFlow(InteractiveUiState())
 
     init {
         val database = AppDatabase.getDatabase(application)
         repository = RtrwRepository(database)
-        _interactiveUiState.value = InteractiveUiState()
+        authRepository = com.example.data.repository.AuthRepository(database)
+        
+        val isAlreadyLoggedIn = authRepository.isUserLoggedIn()
+        _interactiveUiState.value = InteractiveUiState(isLoggedIn = isAlreadyLoggedIn)
         
         // Buat notification channels sistem
         com.example.utils.RuangWargaNotificationHelper.createNotificationChannels(application)
 
         viewModelScope.launch {
             repository.seedInitialDataIfEmpty()
+            if (isAlreadyLoggedIn) {
+                authRepository.reloadProfileFromCloud()
+            }
+        }
+    }
+
+    fun setAuthMode(mode: String) {
+        _interactiveUiState.update { it.copy(authMode = mode, authErrorMessage = null) }
+    }
+
+    fun login(email: String, pass: String) {
+        if (email.isBlank() || pass.isBlank()) {
+            _interactiveUiState.update { it.copy(authErrorMessage = "Email dan password wajib diisi.") }
+            return
+        }
+        viewModelScope.launch {
+            _interactiveUiState.update { it.copy(isAuthLoading = true, authErrorMessage = null) }
+            val result = authRepository.login(email, pass)
+            result.onSuccess { profile ->
+                _interactiveUiState.update {
+                    it.copy(
+                        isLoggedIn = true,
+                        isAuthLoading = false,
+                        authErrorMessage = null,
+                        successSnackbarMessage = "Selamat datang kembali, ${profile.nama.ifBlank { "Warga" }}! 👋"
+                    )
+                }
+            }.onFailure { error ->
+                _interactiveUiState.update {
+                    it.copy(
+                        isAuthLoading = false,
+                        authErrorMessage = error.localizedMessage ?: "Login gagal. Cek kembali email & password Anda."
+                    )
+                }
+            }
+        }
+    }
+
+    fun register(
+        email: String,
+        pass: String,
+        nama: String,
+        nik: String,
+        noKk: String,
+        telepon: String,
+        rt: String,
+        rw: String,
+        alamat: String,
+        pekerjaan: String,
+        role: String
+    ) {
+        if (email.isBlank() || pass.isBlank() || nama.isBlank()) {
+            _interactiveUiState.update { it.copy(authErrorMessage = "Nama, email, dan password wajib diisi.") }
+            return
+        }
+        if (pass.length < 6) {
+            _interactiveUiState.update { it.copy(authErrorMessage = "Password minimal 6 karakter.") }
+            return
+        }
+        viewModelScope.launch {
+            _interactiveUiState.update { it.copy(isAuthLoading = true, authErrorMessage = null) }
+            val result = authRepository.register(
+                email = email,
+                password = pass,
+                nama = nama,
+                nik = nik,
+                noKk = noKk,
+                telepon = telepon,
+                rt = rt,
+                rw = rw,
+                alamat = alamat,
+                pekerjaan = pekerjaan,
+                role = role
+            )
+            result.onSuccess { profile ->
+                _interactiveUiState.update {
+                    it.copy(
+                        isLoggedIn = true,
+                        isAuthLoading = false,
+                        authErrorMessage = null,
+                        successSnackbarMessage = "Pendaftaran akun ${profile.nama} berhasil! Selamat bergabung di RuangWarga 🎉"
+                    )
+                }
+            }.onFailure { error ->
+                _interactiveUiState.update {
+                    it.copy(
+                        isAuthLoading = false,
+                        authErrorMessage = error.localizedMessage ?: "Pendaftaran gagal. Silakan coba lagi."
+                    )
+                }
+            }
+        }
+    }
+
+    fun logout() {
+        viewModelScope.launch {
+            authRepository.logout()
+            _interactiveUiState.update {
+                it.copy(
+                    isLoggedIn = false,
+                    selectedTab = MainTab.BERANDA,
+                    successSnackbarMessage = "Anda telah keluar dari akun."
+                )
+            }
         }
     }
 
@@ -452,7 +568,11 @@ class RtrwViewModel(application: Application) : AndroidViewModel(application) {
             successSnackbarMessage = interactive.successSnackbarMessage,
             customFeedPosts = interactive.customFeedPosts,
             volunteeredEmergencyAlertIds = interactive.volunteeredEmergencyAlertIds,
-            cloudSyncStatus = interactive.cloudSyncStatus
+            cloudSyncStatus = interactive.cloudSyncStatus,
+            isLoggedIn = interactive.isLoggedIn,
+            isAuthLoading = interactive.isAuthLoading,
+            authErrorMessage = interactive.authErrorMessage,
+            authMode = interactive.authMode
         )
     }.stateIn(
         scope = viewModelScope,

@@ -32,6 +32,9 @@ interface ResidentProfileDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrUpdateProfile(profile: ResidentProfileEntity)
+
+    @Query("DELETE FROM resident_profile")
+    suspend fun deleteProfile()
 }
 
 @Dao
