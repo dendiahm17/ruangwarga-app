@@ -80,6 +80,9 @@ import com.example.ui.theme.AccentRedDark
 import com.example.ui.theme.AccentRedLight
 import com.example.ui.theme.BackgroundLight
 import com.example.ui.theme.BorderLight
+import com.example.ui.theme.PrimaryGreenDark
+import com.example.ui.theme.PrimaryGreenLight
+import com.example.ui.theme.PrimaryGreen
 import com.example.ui.theme.PrimaryBlue
 import com.example.ui.theme.PrimaryBlueDark
 import com.example.ui.theme.PrimaryBlueLight
@@ -268,19 +271,52 @@ fun PostDetailBottomSheet(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
-                            .size(24.dp)
+                            .size(28.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFFE2E8F0)),
+                            .background(PrimaryGreenDark),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(14.dp))
+                        Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
                     }
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "Oleh ${post.authorName} (${post.authorRtRw}) • ${post.timeAgo}",
-                        fontSize = 11.sp,
-                        color = TextSecondary
-                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = post.authorName,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextPrimary
+                            )
+                            if (post.authorRole.isNotBlank()) {
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = if (post.authorRole.contains("Ketua", ignoreCase = true) || 
+                                                post.authorRole.contains("Sekretaris", ignoreCase = true) || 
+                                                post.authorRole.contains("Bendahara", ignoreCase = true) || 
+                                                post.authorRole.contains("Keamanan", ignoreCase = true)) 
+                                                Color(0xFFFEF3C7) else Color(0xFFF1F5F9)
+                                ) {
+                                    Text(
+                                        text = post.authorRole,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = if (post.authorRole.contains("Ketua", ignoreCase = true) || 
+                                                    post.authorRole.contains("Sekretaris", ignoreCase = true) || 
+                                                    post.authorRole.contains("Bendahara", ignoreCase = true) || 
+                                                    post.authorRole.contains("Keamanan", ignoreCase = true)) 
+                                                    Color(0xFFB45309) else Color(0xFF475569),
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                        }
+                        Text(
+                            text = "${post.authorRtRw} • ${post.timeAgo}",
+                            fontSize = 10.5.sp,
+                            color = TextSecondary
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(

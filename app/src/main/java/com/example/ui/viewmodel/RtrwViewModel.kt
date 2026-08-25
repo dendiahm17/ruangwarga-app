@@ -285,8 +285,12 @@ class RtrwViewModel(application: Application) : AndroidViewModel(application) {
     init {
         val database = AppDatabase.getDatabase(application)
         repository = RtrwRepository(database)
-        authRepository = com.example.data.repository.AuthRepository(database)
-        _interactiveUiState.value = InteractiveUiState()
+        authRepository = com.example.data.repository.AuthRepository(application, database)
+        
+        val initialSessionPrefs = application.getSharedPreferences("ruang_warga_auth_prefs", android.content.Context.MODE_PRIVATE)
+        val hasSavedLogin = initialSessionPrefs.getBoolean("KEY_IS_LOGGED_IN", false) || com.google.firebase.auth.FirebaseAuth.getInstance().currentUser != null
+
+        _interactiveUiState.value = InteractiveUiState(isLoggedIn = hasSavedLogin)
         
         // Buat notification channels sistem
         com.example.utils.RuangWargaNotificationHelper.createNotificationChannels(application)
@@ -322,7 +326,7 @@ class RtrwViewModel(application: Application) : AndroidViewModel(application) {
                 // 1. Simpan/update ke database lokal perangkat
                 repository.insertEmergencyAlert(remoteAlert)
 
-                // 2. Bunyikan Sirine & Tampilkan Notifikasi HANYA jika ini adalah sinyal darurat baru yang baru saja dikirim manual!
+                // 2. Bunyikan Sirine, Tampilkan Notifikasi, dan Buka Modul Darurat yang Menutupi Layar Utama secara Prioritas & Urgen!
                 if (isNewTrigger) {
                     com.example.utils.EmergencyAudioAlertManager.startEmergencySiren(getApplication(), maxDurationMs = 60000L)
 
@@ -338,6 +342,8 @@ class RtrwViewModel(application: Application) : AndroidViewModel(application) {
                             isEmergencySirenActive = true,
                             activeEmergencyTitle = remoteAlert.judul,
                             activeEmergencyLocation = remoteAlert.lokasi,
+                            selectedEmergencyAlertForDetail = remoteAlert,
+                            showEmergencyAlarmDetailSheet = true,
                             successSnackbarMessage = "🚨 PERINGATAN DARURAT: ${remoteAlert.jenisDarurat} di ${remoteAlert.lokasi}!"
                         )
                     }
@@ -678,7 +684,10 @@ class RtrwViewModel(application: Application) : AndroidViewModel(application) {
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.Eagerly,
-        initialValue = RtrwUiState()
+        initialValue = RtrwUiState(
+            isLoggedIn = application.getSharedPreferences("ruang_warga_auth_prefs", android.content.Context.MODE_PRIVATE)
+                .getBoolean("KEY_IS_LOGGED_IN", false) || com.google.firebase.auth.FirebaseAuth.getInstance().currentUser != null
+        )
     )
 
     fun selectTab(tab: MainTab) {

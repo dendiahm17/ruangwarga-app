@@ -134,11 +134,8 @@ fun HomeScreen(
             onSyncClick = { viewModel.syncAllDataToCloud() },
             onInboxClick = { viewModel.openNotificationsSheet() },
             onEmergencyClick = {
-                if (activeAlert != null) {
-                    viewModel.openEmergencyAlarmDetail(activeAlert)
-                } else {
-                    viewModel.openEmergencyAlarmSheet()
-                }
+                // Akses Cepat Langsung ke Layar Alarm SOS Mandiri
+                viewModel.openAlarmScreen()
             },
             onSilenceSirenClick = { viewModel.silenceSirenSound() }
         )
@@ -251,7 +248,12 @@ fun HomeScreen(
                         }
                     }
                 }
-                HorizontalDivider(thickness = 0.8.dp, color = Color(0xFFF1F5F9))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .background(Color(0xFFF1F5F9))
+                )
             }
         }
 
@@ -328,7 +330,12 @@ fun HomeScreen(
                         }
                     }
                 }
-                HorizontalDivider(thickness = 0.8.dp, color = Color(0xFFF1F5F9))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .background(Color(0xFFF1F5F9))
+                )
             }
         }
 
@@ -399,13 +406,43 @@ fun HomeScreen(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
                                     text = customPost.authorName,
-                                    fontSize = 13.sp,
+                                    fontSize = 13.5.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = TextPrimary
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(text = "✨", fontSize = 11.sp)
                             }
+                            
+                            // Nama Peran / Jabatan di Bawah Nama
+                            if (customPost.authorRole.isNotBlank()) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(top = 1.dp, bottom = 2.dp)
+                                ) {
+                                    Surface(
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = if (customPost.authorRole.contains("Ketua", ignoreCase = true) || 
+                                                    customPost.authorRole.contains("Sekretaris", ignoreCase = true) || 
+                                                    customPost.authorRole.contains("Bendahara", ignoreCase = true) || 
+                                                    customPost.authorRole.contains("Keamanan", ignoreCase = true)) 
+                                                    Color(0xFFFEF3C7) else Color(0xFFF1F5F9)
+                                    ) {
+                                        Text(
+                                            text = customPost.authorRole,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = if (customPost.authorRole.contains("Ketua", ignoreCase = true) || 
+                                                        customPost.authorRole.contains("Sekretaris", ignoreCase = true) || 
+                                                        customPost.authorRole.contains("Bendahara", ignoreCase = true) || 
+                                                        customPost.authorRole.contains("Keamanan", ignoreCase = true)) 
+                                                        Color(0xFFB45309) else Color(0xFF475569),
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+                            }
+
                             Text(
                                 text = "${customPost.timeAgo} • ${customPost.category}",
                                 fontSize = 10.5.sp,
@@ -486,7 +523,14 @@ fun HomeScreen(
                     }
                 }
             }
-            HorizontalDivider(thickness = 0.8.dp, color = Color(0xFFF1F5F9))
+
+            // Garis pembatas & space modern antar konten postingan
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(6.dp)
+                    .background(Color(0xFFF1F5F9))
+            )
         }
 
         item {

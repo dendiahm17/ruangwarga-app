@@ -18,17 +18,50 @@ import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-class AuthRepository(private val db: AppDatabase) {
+import android.content.Context
+import android.content.SharedPreferences
+
+class AuthRepository(
+    private val context: Context,
+    private val db: AppDatabase
+) {
 
     private val auth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
     private val firestore: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
+    private val prefs: SharedPreferences by lazy {
+        context.getSharedPreferences("ruang_warga_auth_prefs", Context.MODE_PRIVATE)
+    }
     
     private var verificationId: String? = null
     private var resendToken: PhoneAuthProvider.ForceResendingToken? = null
 
     suspend fun isUserLoggedIn(): Boolean = withContext(Dispatchers.IO) {
+        val prefLoggedIn = prefs.getBoolean("KEY_IS_LOGGED_IN", false)
+        val savedPhone = prefs.getString("KEY_USER_PHONE", null)
+        val firebaseUser = auth.currentUser
         val currentProfile = db.residentProfileDao().getCurrentProfileDirect()
-        currentProfile != null && currentProfile.telepon.isNotBlank()
+
+        if (prefLoggedIn && !savedPhone.isNullOrBlank()) {
+            return@withContext true
+        }
+
+        if (firebaseUser != null && !firebaseUser.phoneNumber.isNullOrBlank()) {
+            prefs.edit()
+                .putBoolean("KEY_IS_LOGGED_IN", true)
+                .putString("KEY_USER_PHONE", firebaseUser.phoneNumber)
+                .apply()
+            return@withContext true
+        }
+
+        if (currentProfile != null && currentProfile.telepon.isNotBlank()) {
+            prefs.edit()
+                .putBoolean("KEY_IS_LOGGED_IN", true)
+                .putString("KEY_USER_PHONE", currentProfile.telepon)
+                .apply()
+            return@withContext true
+        }
+
+        false
     }
 
     private fun formatIndonesianPhone(phone: String): String {
@@ -171,6 +204,12 @@ class AuthRepository(private val db: AppDatabase) {
 
             db.residentProfileDao().insertOrUpdateProfile(profile)
 
+            // Simpan status sesi aktif ke SharedPreferences
+            prefs.edit()
+                .putBoolean("KEY_IS_LOGGED_IN", true)
+                .putString("KEY_USER_PHONE", formattedPhone)
+                .apply()
+
             // Update lastLogin dan metadata ke Cloud Firestore tanpa menimpa data yang sudah ada
             try {
                 val loginMetadata = hashMapOf<String, Any>(
@@ -265,6 +304,11 @@ class AuthRepository(private val db: AppDatabase) {
             val updated = profile.copy(telepon = formattedPhone)
             db.residentProfileDao().insertOrUpdateProfile(updated)
 
+            prefs.edit()
+                .putBoolean("KEY_IS_LOGGED_IN", true)
+                .putString("KEY_USER_PHONE", formattedPhone)
+                .apply()
+
             val firestoreData = hashMapOf(
                 "uid" to updated.uid,
                 "nama" to updated.nama.trim(),
@@ -300,6 +344,7 @@ class AuthRepository(private val db: AppDatabase) {
     suspend fun logout(): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             auth.signOut()
+            prefs.edit().clear().apply()
             db.residentProfileDao().deleteProfile()
             Result.success(Unit)
         } catch (e: Exception) {
