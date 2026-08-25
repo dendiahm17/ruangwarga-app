@@ -151,48 +151,30 @@ fun AktivitasScreen(
         agendaData
     }
 
-    LazyColumn(
+    Column(
         modifier = modifier
             .fillMaxSize()
-            .background(BackgroundLight)
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-            .testTag("agenda_screen"),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .background(Color.White)
     ) {
-        // Header (Agenda + Calendar Icon)
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 4.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Agenda",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary
-                )
+        // Native Full Horizontal App Header
+        com.example.ui.components.AppHeader(
+            title = "Agenda Kegiatan",
+            rightActionIcon = Icons.Default.CalendarMonth,
+            onRightActionClick = { viewModel.openAgendaCalendarSheet() }
+        )
 
-                IconButton(
-                    onClick = { viewModel.openAgendaCalendarSheet() },
-                    modifier = Modifier.size(36.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.CalendarMonth,
-                        contentDescription = "Kalender",
-                        tint = TextPrimary,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-            }
-        }
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .testTag("agenda_screen")
+        ) {
 
         // Segmented Tabs: [ Agenda Saya ] | [ Semua Agenda ]
         item {
             Row(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 // Tab Agenda Saya
                 val isTab1 = selectedTab == "Agenda Saya"
@@ -240,103 +222,102 @@ fun AktivitasScreen(
                     )
                 }
             }
+            HorizontalDivider(thickness = 0.8.dp, color = Color(0xFFF1F5F9))
         }
 
         // Timeline Groups
         displayedGroups.forEach { group ->
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 14.dp)
+                ) {
                     Text(
                         text = group.sectionHeader,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
-                        color = TextPrimary
+                        color = TextPrimary,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                     )
 
                     group.items.forEach { agenda ->
-                        Card(
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
                                     Toast.makeText(context, "${agenda.title} di ${agenda.location}", Toast.LENGTH_SHORT).show()
-                                },
-                            shape = RoundedCornerShape(14.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
-                            border = BorderStroke(1.dp, BorderLight)
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                // Time Pill Box
-                                Box(
-                                    modifier = Modifier
-                                        .size(width = 54.dp, height = 54.dp)
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(agenda.timeBg),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = agenda.time,
-                                        fontSize = 11.5.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = TextPrimary,
-                                        lineHeight = 14.sp
-                                    )
                                 }
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Time Pill Box
+                            Box(
+                                modifier = Modifier
+                                    .size(width = 54.dp, height = 54.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(agenda.timeBg),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = agenda.time,
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextPrimary,
+                                    lineHeight = 14.sp
+                                )
+                            }
 
-                                Spacer(modifier = Modifier.width(14.dp))
+                            Spacer(modifier = Modifier.width(14.dp))
 
-                                // Event Details
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = agenda.title,
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = TextPrimary
-                                    )
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = agenda.location,
-                                        fontSize = 11.5.sp,
-                                        color = TextSecondary
-                                    )
-                                    Spacer(modifier = Modifier.height(6.dp))
+                            // Event Details
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = agenda.title,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextPrimary
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = agenda.location,
+                                    fontSize = 11.5.sp,
+                                    color = TextSecondary
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
 
-                                    // Avatar Stack + Counter
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Row(horizontalArrangement = Arrangement.spacedBy((-6).dp)) {
-                                            listOf(PrimaryGreen, AccentOrange, AccentPurple).forEach { color ->
-                                                Box(
-                                                    modifier = Modifier
-                                                        .size(18.dp)
-                                                        .clip(CircleShape)
-                                                        .background(color)
-                                                        .border(1.dp, Color.White, CircleShape),
-                                                    contentAlignment = Alignment.Center
-                                                ) {
-                                                    Icon(
-                                                        imageVector = Icons.Default.Person,
-                                                        contentDescription = null,
-                                                        tint = Color.White,
-                                                        modifier = Modifier.size(11.dp)
-                                                    )
-                                                }
+                                // Avatar Stack + Counter
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Row(horizontalArrangement = Arrangement.spacedBy((-6).dp)) {
+                                        listOf(PrimaryGreen, AccentOrange, AccentPurple).forEach { color ->
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(18.dp)
+                                                    .clip(CircleShape)
+                                                    .background(color)
+                                                    .border(1.dp, Color.White, CircleShape),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Person,
+                                                    contentDescription = null,
+                                                    tint = Color.White,
+                                                    modifier = Modifier.size(11.dp)
+                                                )
                                             }
                                         }
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
-                                            text = "+${agenda.participantCount}",
-                                            fontSize = 10.sp,
-                                            fontWeight = FontWeight.Medium,
-                                            color = TextSecondary
-                                        )
                                     }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "+${agenda.participantCount}",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = TextSecondary
+                                    )
                                 }
                             }
                         }
+                        HorizontalDivider(thickness = 0.8.dp, color = Color(0xFFF1F5F9))
                     }
                 }
             }
@@ -346,4 +327,5 @@ fun AktivitasScreen(
             Spacer(modifier = Modifier.height(80.dp))
         }
     }
+}
 }

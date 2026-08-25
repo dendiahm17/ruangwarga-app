@@ -201,14 +201,15 @@ class FirestoreSyncService(
         }
     }
 
-    // 4. Sinkronisasi Peringatan Darurat Siaga Warga
+    // 4. Sinkronisasi Peringatan Darurat Siaga Warga ke Cloud Firestore
     suspend fun syncEmergencyAlert(alert: EmergencyAlertEntity): Boolean {
         return try {
             val docId = if (alert.id != 0) "alert_${alert.id}" else "alert_${System.currentTimeMillis()}"
             val data = hashMapOf(
                 "id" to alert.id,
+                "docId" to docId,
                 "jenisDarurat" to alert.jenisDarurat,
-                "judul" to alert.judul,
+                "judul" to alert.judul.ifBlank { alert.jenisDarurat },
                 "lokasi" to alert.lokasi,
                 "kontak" to alert.kontak,
                 "tingkatPrioritas" to alert.tingkatPrioritas,
@@ -218,7 +219,8 @@ class FirestoreSyncService(
                 "instruksi" to alert.instruksi,
                 "catatan" to alert.catatan,
                 "isVerified" to alert.isVerified,
-                "updatedAt" to System.currentTimeMillis()
+                "updatedAt" to System.currentTimeMillis(),
+                "createdAt" to System.currentTimeMillis()
             )
             firestore.collection(COL_EMERGENCY_ALERTS).document(docId).set(data, SetOptions.merge()).await()
             Log.d(TAG, "Emergency alert synced: $docId")
@@ -227,6 +229,49 @@ class FirestoreSyncService(
             Log.e(TAG, "Error syncing emergency alert: ${e.message}")
             false
         }
+    }
+
+    // Listener Realtime Sinyal Alarm Darurat dari Cloud Firestore
+    private val listenerStartTime = System.currentTimeMillis() - 5000L // Toleransi 5 detik
+
+    fun listenToEmergencyAlerts(onAlertReceived: (alert: EmergencyAlertEntity, isNewTrigger: Boolean) -> Unit) {
+        firestore.collection(COL_EMERGENCY_ALERTS)
+            .whereEqualTo("status", "Aktif")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e(TAG, "Listen error for emergency alerts: ${error.message}")
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    for (change in snapshot.documentChanges) {
+                        val doc = change.document
+                        val createdAt = doc.getLong("createdAt") ?: 0L
+                        val isNewTrigger = (change.type == com.google.firebase.firestore.DocumentChange.Type.ADDED || 
+                                           change.type == com.google.firebase.firestore.DocumentChange.Type.MODIFIED) && 
+                                           (createdAt > listenerStartTime)
+
+                        try {
+                            val alert = EmergencyAlertEntity(
+                                id = (doc.getLong("id") ?: System.currentTimeMillis() % 100000).toInt(),
+                                jenisDarurat = doc.getString("jenisDarurat") ?: "Peringatan Darurat",
+                                judul = doc.getString("judul") ?: (doc.getString("jenisDarurat") ?: "Peringatan Darurat"),
+                                lokasi = doc.getString("lokasi") ?: "Lingkungan Warga",
+                                kontak = doc.getString("kontak") ?: "",
+                                tingkatPrioritas = doc.getString("tingkatPrioritas") ?: "Tinggi",
+                                status = doc.getString("status") ?: "Aktif",
+                                waktu = doc.getString("waktu") ?: "Baru saja",
+                                pelapor = doc.getString("pelapor") ?: "Warga",
+                                instruksi = doc.getString("instruksi") ?: "Harap waspada dan siaga.",
+                                catatan = doc.getString("catatan") ?: "",
+                                isVerified = doc.getBoolean("isVerified") ?: false
+                            )
+                            onAlertReceived(alert, isNewTrigger)
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error parsing incoming emergency alert doc: ${e.message}")
+                        }
+                    }
+                }
+            }
     }
 
     // 5. Sinkronisasi Pengumuman

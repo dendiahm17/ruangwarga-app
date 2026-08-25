@@ -188,21 +188,17 @@ fun MainApp(
         modifier = modifier.fillMaxSize(),
         
         bottomBar = {
-            // Modern Bottom Navigation Bar matching RuangWarga Mockup
-            Card(
+            // Native Full-Width Horizontal Bottom Navigation Bar
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .navigationBarsPadding()
-                    .padding(horizontal = 10.dp, vertical = 6.dp)
-                    .shadow(12.dp, RoundedCornerShape(24.dp), spotColor = Color(0x25000000)),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+                    .navigationBarsPadding(),
+                color = Color.White
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 4.dp, vertical = 6.dp),
+                        .padding(horizontal = 4.dp, vertical = 3.dp),
                     horizontalArrangement = Arrangement.SpaceAround,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -213,7 +209,7 @@ fun MainApp(
                         val interactionSource = remember { MutableInteractionSource() }
 
                         if (item.isCenterButton) {
-                            // Center Floating-Style Action Button for "Buat"
+                            // Center Action Button for "Buat"
                             Column(
                                 modifier = Modifier
                                     .clickable(
@@ -222,7 +218,7 @@ fun MainApp(
                                     ) {
                                         viewModel.openCreatePostSheet()
                                     }
-                                    .padding(horizontal = 6.dp),
+                                    .padding(horizontal = 6.dp, vertical = 2.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Box(
@@ -236,7 +232,7 @@ fun MainApp(
                                         imageVector = Icons.Filled.Add,
                                         contentDescription = "Buat",
                                         tint = Color.White,
-                                        modifier = Modifier.size(24.dp)
+                                        modifier = Modifier.size(20.dp)
                                     )
                                 }
                                 Spacer(modifier = Modifier.height(2.dp))
@@ -250,23 +246,23 @@ fun MainApp(
                         } else {
                             Column(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(14.dp))
+                                    .clip(RoundedCornerShape(8.dp))
                                     .clickable(
                                         interactionSource = interactionSource,
                                         indication = null
                                     ) {
                                         viewModel.selectTab(item.tab)
                                     }
-                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                                    .padding(horizontal = 8.dp, vertical = 3.dp)
                                     .testTag("nav_tab_${item.label.lowercase()}"),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .clip(RoundedCornerShape(10.dp))
+                                        .clip(RoundedCornerShape(12.dp))
                                         .background(if (isSelected) PrimaryGreenLight else Color.Transparent)
-                                        .padding(horizontal = 8.dp, vertical = 3.dp),
+                                        .padding(horizontal = 10.dp, vertical = 3.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
@@ -282,7 +278,7 @@ fun MainApp(
                                 Text(
                                     text = item.label,
                                     fontSize = 10.sp,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                     color = if (isSelected) PrimaryGreenDark else TextSecondary
                                 )
                             }
@@ -295,23 +291,37 @@ fun MainApp(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(bottom = innerPadding.calculateBottomPadding())
         ) {
-            AnimatedContent(
-                targetState = if (uiState.showAllAnnouncementsScreen) "pengumuman_full" else uiState.selectedTab.name,
-                transitionSpec = { fadeIn() togetherWith fadeOut() },
-                label = "screen_transition"
-            ) { target ->
-                when (target) {
-                    "pengumuman_full" -> PengumumanScreen(uiState = uiState, viewModel = viewModel)
-                    MainTab.BERANDA.name -> HomeScreen(uiState = uiState, viewModel = viewModel)
-                    MainTab.AGENDA.name, MainTab.AKTIVITAS.name -> AktivitasScreen(uiState = uiState, viewModel = viewModel)
-                    MainTab.LAYANAN.name -> LayananScreen(uiState = uiState, viewModel = viewModel)
-                    MainTab.WARGA.name -> PengurusScreen(uiState = uiState, viewModel = viewModel)
-                    MainTab.SOSIAL.name -> SosialScreen(uiState = uiState, viewModel = viewModel)
-                    MainTab.KOTAK_MASUK.name, MainTab.PESAN.name -> PesanScreen(uiState = uiState, viewModel = viewModel)
-                    MainTab.PROFIL.name -> ProfilScreen(uiState = uiState, viewModel = viewModel)
-                    else -> HomeScreen(uiState = uiState, viewModel = viewModel)
+            Column(modifier = Modifier.fillMaxSize()) {
+                // Banner Timbul Sirine Darurat Serentak (Melayang di atas semua tab saat aktif)
+                if (uiState.isEmergencySirenActive) {
+                    com.example.ui.components.ElevatedSirenActiveBanner(
+                        title = uiState.activeEmergencyTitle.ifBlank { "Bahaya Lingkungan" },
+                        location = uiState.activeEmergencyLocation.ifBlank { "RT 03 / RW 02" },
+                        onSilenceClick = { viewModel.silenceSirenSound() },
+                        onOpenDetailClick = { viewModel.openAlarmScreen() }
+                    )
+                }
+
+                Box(modifier = Modifier.weight(1f)) {
+                    AnimatedContent(
+                        targetState = if (uiState.showAllAnnouncementsScreen) "pengumuman_full" else uiState.selectedTab.name,
+                        transitionSpec = { fadeIn() togetherWith fadeOut() },
+                        label = "screen_transition"
+                    ) { target ->
+                        when (target) {
+                            "pengumuman_full" -> PengumumanScreen(uiState = uiState, viewModel = viewModel)
+                            MainTab.BERANDA.name -> HomeScreen(uiState = uiState, viewModel = viewModel)
+                            MainTab.AGENDA.name, MainTab.AKTIVITAS.name -> AktivitasScreen(uiState = uiState, viewModel = viewModel)
+                            MainTab.LAYANAN.name -> LayananScreen(uiState = uiState, viewModel = viewModel)
+                            MainTab.WARGA.name -> PengurusScreen(uiState = uiState, viewModel = viewModel)
+                            MainTab.SOSIAL.name -> SosialScreen(uiState = uiState, viewModel = viewModel)
+                            MainTab.KOTAK_MASUK.name, MainTab.PESAN.name -> PesanScreen(uiState = uiState, viewModel = viewModel)
+                            MainTab.PROFIL.name -> ProfilScreen(uiState = uiState, viewModel = viewModel)
+                            else -> HomeScreen(uiState = uiState, viewModel = viewModel)
+                        }
+                    }
                 }
             }
         }
@@ -673,17 +683,17 @@ fun MainApp(
         }
     }
 
-    // 🚨 Emergency Alarm Bottom Sheet
-    if (uiState.showEmergencyAlarmSheet) {
+    // 🚨 Halaman Khusus Tombol Alarm & Pusat Darurat (AlarmScreen)
+    if (uiState.showAlarmScreen || uiState.showEmergencyAlarmSheet) {
         Dialog(
             properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
-            onDismissRequest = { viewModel.closeEmergencyAlarmSheet() }
+            onDismissRequest = { viewModel.closeAlarmScreen() }
         ) {
             Surface(modifier = Modifier.fillMaxSize(), color = BackgroundLight) {
-                com.example.ui.dialogs.EmergencyAlarmBottomSheet(
-                    alerts = uiState.emergencyAlerts,
+                com.example.ui.screens.AlarmScreen(
+                    uiState = uiState,
                     viewModel = viewModel,
-                    onDismiss = { viewModel.closeEmergencyAlarmSheet() }
+                    onBack = { viewModel.closeAlarmScreen() }
                 )
             }
         }

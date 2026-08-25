@@ -139,6 +139,7 @@ data class RtrwUiState(
     val showCreateAktivitasFormSheet: Boolean = false,
     val selectedAktivitasTypeForCreate: String = "Kegiatan",
     val showEmergencyAlarmSheet: Boolean = false,
+    val showAlarmScreen: Boolean = false,
     val showEmergencyAlarmDetailSheet: Boolean = false,
     val showReportEmergencySheet: Boolean = false,
     val selectedEmergencyAlertForDetail: EmergencyAlertEntity? = null,
@@ -178,6 +179,9 @@ data class RtrwUiState(
     val customFeedPosts: List<CommunityFeedPost> = emptyList(),
     val volunteeredEmergencyAlertIds: Set<Int> = emptySet(),
     val cloudSyncStatus: String = "Tersinkronisasi ke Cloud",
+    val isEmergencySirenActive: Boolean = false,
+    val activeEmergencyTitle: String = "",
+    val activeEmergencyLocation: String = "",
     val isLoggedIn: Boolean = false,
     val isAuthLoading: Boolean = false,
     val authErrorMessage: String? = null,
@@ -223,6 +227,7 @@ data class InteractiveUiState(
     val showCreateAktivitasFormSheet: Boolean = false,
     val selectedAktivitasTypeForCreate: String = "Kegiatan",
     val showEmergencyAlarmSheet: Boolean = false,
+    val showAlarmScreen: Boolean = false,
     val showEmergencyAlarmDetailSheet: Boolean = false,
     val showReportEmergencySheet: Boolean = false,
     val selectedEmergencyAlertForDetail: EmergencyAlertEntity? = null,
@@ -262,6 +267,9 @@ data class InteractiveUiState(
     val customFeedPosts: List<CommunityFeedPost> = emptyList(),
     val volunteeredEmergencyAlertIds: Set<Int> = emptySet(),
     val cloudSyncStatus: String = "Tersinkronisasi ke Cloud",
+    val isEmergencySirenActive: Boolean = false,
+    val activeEmergencyTitle: String = "",
+    val activeEmergencyLocation: String = "",
     val isLoggedIn: Boolean = false,
     val isAuthLoading: Boolean = false,
     val authErrorMessage: String? = null,
@@ -283,6 +291,14 @@ class RtrwViewModel(application: Application) : AndroidViewModel(application) {
         // Buat notification channels sistem
         com.example.utils.RuangWargaNotificationHelper.createNotificationChannels(application)
 
+        // Langganan Topik Notifikasi Darurat Masal (Background Push FCM)
+        try {
+            com.google.firebase.messaging.FirebaseMessaging.getInstance().subscribeToTopic("emergency_alerts")
+            com.google.firebase.messaging.FirebaseMessaging.getInstance().subscribeToTopic("warga_rt03_rw02")
+        } catch (e: Exception) {
+            // ignore if google play services not available
+        }
+
         viewModelScope.launch {
             repository.seedInitialDataIfEmpty()
             val isAlreadyLoggedIn = authRepository.isUserLoggedIn()
@@ -296,6 +312,35 @@ class RtrwViewModel(application: Application) : AndroidViewModel(application) {
                     // Gabungkan remote posts dengan local unique posts
                     val combined = (remotePosts + current.customFeedPosts).distinctBy { it.id }
                     current.copy(customFeedPosts = combined)
+                }
+            }
+        }
+
+        // Listener Real-time Sinyal Alarm Darurat dari Cloud Firestore
+        firestoreSyncService.listenToEmergencyAlerts { remoteAlert, isNewTrigger ->
+            viewModelScope.launch {
+                // 1. Simpan/update ke database lokal perangkat
+                repository.insertEmergencyAlert(remoteAlert)
+
+                // 2. Bunyikan Sirine & Tampilkan Notifikasi HANYA jika ini adalah sinyal darurat baru yang baru saja dikirim manual!
+                if (isNewTrigger) {
+                    com.example.utils.EmergencyAudioAlertManager.startEmergencySiren(getApplication(), maxDurationMs = 60000L)
+
+                    com.example.utils.RuangWargaNotificationHelper.showEmergencyAlertNotification(
+                        context = getApplication(),
+                        title = "🚨 PERINGATAN DARURAT: ${remoteAlert.jenisDarurat}",
+                        message = remoteAlert.catatan.ifBlank { "Sinyal bahaya aktif di ${remoteAlert.lokasi}. Harap waspada dan siaga!" },
+                        location = remoteAlert.lokasi
+                    )
+
+                    _interactiveUiState.update {
+                        it.copy(
+                            isEmergencySirenActive = true,
+                            activeEmergencyTitle = remoteAlert.judul,
+                            activeEmergencyLocation = remoteAlert.lokasi,
+                            successSnackbarMessage = "🚨 PERINGATAN DARURAT: ${remoteAlert.jenisDarurat} di ${remoteAlert.lokasi}!"
+                        )
+                    }
                 }
             }
         }
@@ -581,6 +626,11 @@ class RtrwViewModel(application: Application) : AndroidViewModel(application) {
             showCreatePostSheet = interactive.showCreatePostSheet,
             showCreateAktivitasFormSheet = interactive.showCreateAktivitasFormSheet,
             selectedAktivitasTypeForCreate = interactive.selectedAktivitasTypeForCreate,
+            showEmergencyAlarmSheet = interactive.showEmergencyAlarmSheet,
+            showAlarmScreen = interactive.showAlarmScreen,
+            showEmergencyAlarmDetailSheet = interactive.showEmergencyAlarmDetailSheet,
+            showReportEmergencySheet = interactive.showReportEmergencySheet,
+            selectedEmergencyAlertForDetail = interactive.selectedEmergencyAlertForDetail,
             showCreateLetterSheet = interactive.showCreateLetterSheet,
             preselectedLetterType = interactive.preselectedLetterType,
             showCreateComplaintSheet = interactive.showCreateComplaintSheet,
@@ -617,6 +667,9 @@ class RtrwViewModel(application: Application) : AndroidViewModel(application) {
             customFeedPosts = interactive.customFeedPosts,
             volunteeredEmergencyAlertIds = interactive.volunteeredEmergencyAlertIds,
             cloudSyncStatus = interactive.cloudSyncStatus,
+            isEmergencySirenActive = interactive.isEmergencySirenActive,
+            activeEmergencyTitle = interactive.activeEmergencyTitle,
+            activeEmergencyLocation = interactive.activeEmergencyLocation,
             isLoggedIn = interactive.isLoggedIn,
             isAuthLoading = interactive.isAuthLoading,
             authErrorMessage = interactive.authErrorMessage,
@@ -772,11 +825,19 @@ class RtrwViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun openEmergencyAlarmSheet() {
-        _interactiveUiState.update { it.copy(showEmergencyAlarmSheet = true) }
+        _interactiveUiState.update { it.copy(showAlarmScreen = true) }
     }
 
     fun closeEmergencyAlarmSheet() {
-        _interactiveUiState.update { it.copy(showEmergencyAlarmSheet = false) }
+        _interactiveUiState.update { it.copy(showEmergencyAlarmSheet = false, showAlarmScreen = false) }
+    }
+
+    fun openAlarmScreen() {
+        _interactiveUiState.update { it.copy(showAlarmScreen = true) }
+    }
+
+    fun closeAlarmScreen() {
+        _interactiveUiState.update { it.copy(showAlarmScreen = false) }
     }
 
     fun openEmergencyAlarmDetail(alert: EmergencyAlertEntity) {
@@ -1058,9 +1119,10 @@ class RtrwViewModel(application: Application) : AndroidViewModel(application) {
     fun updateProfile(profile: ResidentProfileEntity) {
         viewModelScope.launch {
             repository.updateProfile(profile)
+            authRepository.saveCompleteProfile(profile)
             closePersonalDataSheet()
             _interactiveUiState.update {
-                it.copy(successSnackbarMessage = "Data profil berhasil diperbarui!")
+                it.copy(successSnackbarMessage = "Data kependudukan berhasil disimpan ke Cloud Firestore!")
             }
         }
     }
@@ -1108,19 +1170,83 @@ class RtrwViewModel(application: Application) : AndroidViewModel(application) {
 
     fun triggerEmergencyAlert(jenisDarurat: String, lokasi: String, catatan: String = "") {
         viewModelScope.launch {
-            repository.triggerPanicEmergency(jenisDarurat, lokasi, catatan)
+            val alertId = repository.triggerPanicEmergency(jenisDarurat, lokasi, catatan)
             closePanicSosSheet()
+
+            // 1. Broadcast Sinyal Darurat ke Cloud Firestore untuk seluruh Warga
+            val emergencyAlertEntity = com.example.data.model.EmergencyAlertEntity(
+                id = alertId.toInt(),
+                jenisDarurat = jenisDarurat,
+                judul = "🚨 $jenisDarurat di $lokasi",
+                pelapor = "Warga Lingkungan",
+                lokasi = lokasi,
+                kontak = "",
+                waktu = "Baru saja",
+                tingkatPrioritas = "Kritis",
+                status = "Aktif",
+                targetWilayah = "Seluruh RW",
+                dikeluarkanOleh = "Pos Siaga RW 02",
+                instruksi = "• Warga sekitar harap siaga dan waspada\n• Hindari area jika berbahaya\n• Saling bantu sesama warga",
+                timelineUpdates = "Baru saja: Sinyal darurat diaktifkan oleh warga",
+                isVerified = true,
+                catatan = catatan.ifBlank { "Peringatan darurat aktif. Warga sekitar dimohon saling bantu." }
+            )
+            firestoreSyncService.syncEmergencyAlert(emergencyAlertEntity)
+
+            // 2. Bunyikan Sirine & Aktifkan Getaran Serentak di HP Pengirim
+            com.example.utils.EmergencyAudioAlertManager.startEmergencySiren(getApplication())
+
+            // 3. Kirim Notifikasi Massal Prioritas Tinggi
+            com.example.utils.RuangWargaNotificationHelper.showEmergencyAlertNotification(
+                context = getApplication(),
+                title = "🚨 PERINGATAN DARURAT: $jenisDarurat!",
+                message = catatan.ifBlank { "Peringatan darurat telah diaktifkan oleh warga. Tim siaga RT/RW & Satpam segera bergerak!" },
+                location = lokasi
+            )
+
+            // 4. Update State Siaga Aktif
             _interactiveUiState.update {
-                it.copy(successSnackbarMessage = "🚨 SINYAL DARURAT DIKIRIM KE POS SATPAM & PENGURUS RT!")
+                it.copy(
+                    isEmergencySirenActive = true,
+                    activeEmergencyTitle = jenisDarurat,
+                    activeEmergencyLocation = lokasi,
+                    successSnackbarMessage = "🚨 SINYAL & SIRINE DARURAT BERBUNYI SERENTAK DI SELURUH HP WARGA!"
+                )
             }
+        }
+    }
+
+    fun testEmergencySiren(durationMs: Long = 6000L) {
+        viewModelScope.launch {
+            com.example.utils.EmergencyAudioAlertManager.startEmergencySiren(getApplication(), durationMs)
+            _interactiveUiState.update {
+                it.copy(
+                    isEmergencySirenActive = true,
+                    successSnackbarMessage = "🔊 Uji coba bunyi alarm darurat & getaran sedang berlangsung..."
+                )
+            }
+        }
+    }
+
+    fun silenceSirenSound() {
+        com.example.utils.EmergencyAudioAlertManager.stopEmergencySiren()
+        _interactiveUiState.update {
+            it.copy(
+                isEmergencySirenActive = false,
+                successSnackbarMessage = "Bunyi sirine dimatikan di perangkat ini."
+            )
         }
     }
 
     fun resolveEmergencyAlert(id: Int) {
         viewModelScope.launch {
             repository.resolveEmergencyAlert(id)
+            silenceSirenSound()
             _interactiveUiState.update {
-                it.copy(successSnackbarMessage = "Status darurat ditandai selesai/ditangani.")
+                it.copy(
+                    isEmergencySirenActive = false,
+                    successSnackbarMessage = "Status darurat ditandai selesai/ditangani."
+                )
             }
         }
     }

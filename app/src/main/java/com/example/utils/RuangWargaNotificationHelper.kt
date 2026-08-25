@@ -25,6 +25,14 @@ object RuangWargaNotificationHelper {
             val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
             // 1. Channel Peringatan Darurat Siaga (High Importance, Sound & Vibration)
+            val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+                ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+
+            val audioAttributes = android.media.AudioAttributes.Builder()
+                .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .setUsage(android.media.AudioAttributes.USAGE_ALARM)
+                .build()
+
             val emergencyChannel = NotificationChannel(
                 CHANNEL_EMERGENCY,
                 "Peringatan Darurat Siaga Warga",
@@ -32,7 +40,11 @@ object RuangWargaNotificationHelper {
             ).apply {
                 description = "Notifikasi darurat kebencanaan, kebakaran, dan alarm siaga RT/RW"
                 enableVibration(true)
-                vibrationPattern = longArrayOf(0, 500, 200, 500, 200, 500)
+                vibrationPattern = longArrayOf(0, 500, 200, 500, 200, 800)
+                setSound(defaultSoundUri, audioAttributes)
+                lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
+                enableLights(true)
+                lightColor = android.graphics.Color.RED
             }
 
             // 2. Channel Pengumuman & Agenda Warga
@@ -60,7 +72,7 @@ object RuangWargaNotificationHelper {
     }
 
     /**
-     * Menampilkan notifikasi darurat siaga warga.
+     * Menampilkan notifikasi darurat siaga warga (Broadcast Massal).
      */
     fun showEmergencyAlertNotification(
         context: Context,
@@ -72,6 +84,7 @@ object RuangWargaNotificationHelper {
 
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            putExtra("EXTRA_OPEN_EMERGENCY", true)
         }
         val pendingIntent = PendingIntent.getActivity(
             context,
@@ -80,27 +93,30 @@ object RuangWargaNotificationHelper {
             PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0)
         )
 
-        val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-
-        val builder = NotificationCompat.Builder(context, CHANNEL_EMERGENCY)
-            .setSmallIcon(android.R.drawable.stat_sys_warning)
-            .setContentTitle("🚨 SIAGA DARURAT: $title")
-            .setContentText("Lokasi: $location • $message")
-            .setStyle(
-                NotificationCompat.BigTextStyle()
-                    .bigText("🚨 Peringatan Siaga Warga\nLokasi: $location\n\n$message\n\nMohon warga sekitar tetap waspada dan saling berkoordinasi.")
-            )
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setCategory(NotificationCompat.CATEGORY_ALARM)
-            .setSound(defaultSoundUri)
-            .setAutoCancel(true)
-            .setContentIntent(pendingIntent)
+        val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+            ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
         try {
+            val builder = NotificationCompat.Builder(context, CHANNEL_EMERGENCY)
+                .setSmallIcon(android.R.drawable.stat_sys_warning)
+                .setContentTitle("🚨 PERINGATAN DARURAT: $title")
+                .setContentText("Lokasi: $location • $message")
+                .setStyle(
+                    NotificationCompat.BigTextStyle()
+                        .bigText("🚨 ALARM SIAGA WARGA RT 03 / RW 02\n\nKejadian: $title\nLokasi: $location\nInfo: $message\n\nSirine berbunyi serentak di seluruh handphone warga dan Pos Kamling.")
+                )
+                .setPriority(NotificationCompat.PRIORITY_MAX)
+                .setCategory(NotificationCompat.CATEGORY_ALARM)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setSound(defaultSoundUri)
+                .setVibrate(longArrayOf(0, 500, 200, 500, 200, 800))
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent)
+
             val notificationManager = NotificationManagerCompat.from(context)
-            notificationManager.notify((System.currentTimeMillis() % 10000).toInt(), builder.build())
-        } catch (e: SecurityException) {
-            // Permission not granted on Android 13+
+            notificationManager.notify(9999, builder.build())
+        } catch (e: Throwable) {
+            // Safe fallback jika permission not granted atau device restriction
         }
     }
 

@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.shadow
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.AccountBalanceWallet
@@ -27,6 +28,7 @@ import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.FolderShared
 import androidx.compose.material.icons.filled.Headphones
+import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.HomeRepairService
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Payments
@@ -143,6 +145,14 @@ fun LayananScreen(
                     icon = Icons.Default.Warning,
                     iconTint = Color(0xFFDC2626),
                     iconBg = Color(0xFFFEE2E2)
+                ),
+                ServiceMenuCardItem(
+                    id = "alarm_darurat",
+                    title = "Alarm Darurat (SOS)",
+                    subtitle = "Pusat siaga & sirene",
+                    icon = Icons.Default.Warning,
+                    iconTint = Color(0xFFB91C1C),
+                    iconBg = Color(0xFFFFE4E6)
                 )
             )
         ),
@@ -162,31 +172,25 @@ fun LayananScreen(
         )
     )
 
-    LazyColumn(
+    Column(
         modifier = modifier
             .fillMaxSize()
             .background(BackgroundLight)
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-            .testTag("layanan_screen"),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Header
-        item {
-            Column(modifier = Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 2.dp)) {
-                Text(
-                    text = "Layanan",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = "Katalog layanan terpadu warga RW 02",
-                    fontSize = 12.sp,
-                    color = TextSecondary
-                )
-            }
-        }
+        // Native Full Horizontal App Header
+        com.example.ui.components.AppHeader(
+            title = "Layanan Terpadu",
+            rightActionIcon = Icons.Default.HelpOutline,
+            onRightActionClick = { viewModel.openHelpSheet() }
+        )
+
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .testTag("layanan_screen"),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
 
         // Categorized Service Sections
         serviceCategories.forEach { category ->
@@ -241,6 +245,7 @@ fun LayananScreen(
                                                 "surat" -> viewModel.openSuratScreenSheet()
                                                 "iuran" -> viewModel.openIuranScreenSheet()
                                                 "laporan" -> viewModel.openPengaduanScreenSheet()
+                                                "alarm_darurat" -> viewModel.openAlarmScreen()
                                                 "warga" -> viewModel.selectTab(MainTab.WARGA)
                                                 "buku_kas" -> viewModel.openBukuKasSheet()
                                                 "aset_rw" -> viewModel.openAssetRwSheet()
@@ -355,4 +360,5 @@ fun LayananScreen(
             Spacer(modifier = Modifier.height(80.dp))
         }
     }
+}
 }

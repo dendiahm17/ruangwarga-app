@@ -215,57 +215,6 @@ fun AuthScreen(
                     .padding(horizontal = 20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Segmented Switcher Tab (Hanya tampil jika tidak sedang di halaman OTP)
-                if (!isOtpStep) {
-                    Surface(
-                        shape = RoundedCornerShape(14.dp),
-                        color = Color(0xFFE2E8F0),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(4.dp)
-                        ) {
-                            // Tab Masuk Cepat
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(if (!isRegister) Color.White else Color.Transparent)
-                                    .clickable { viewModel.setAuthMode("LOGIN") }
-                                    .padding(vertical = 10.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "📱 Masuk No. HP",
-                                    fontSize = 12.5.sp,
-                                    fontWeight = if (!isRegister) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (!isRegister) PrimaryGreenDark else TextSecondary
-                                )
-                            }
-
-                            // Tab Daftar Baru
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(if (isRegister) Color.White else Color.Transparent)
-                                    .clickable { viewModel.setAuthMode("REGISTER") }
-                                    .padding(vertical = 10.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "✍️ Daftar Warga",
-                                    fontSize = 12.5.sp,
-                                    fontWeight = if (isRegister) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isRegister) PrimaryGreenDark else TextSecondary
-                                )
-                            }
-                        }
-                    }
-                }
-
                 // Error Message Alert
                 AnimatedVisibility(visible = uiState.authErrorMessage != null) {
                     uiState.authErrorMessage?.let { errMsg ->
@@ -431,19 +380,19 @@ fun AuthScreen(
                                     )
                                 }
                             }
-                        } else if (!isRegister) {
+                        } else {
                             // ==========================================
                             // 📱 TAHAP 1: MASUK INSTAN DENGAN NO HP
                             // ==========================================
                             Text(
-                                text = "Masuk Cepat dengan No. HP",
-                                fontSize = 14.sp,
+                                text = "Masuk / Masuk Kembali",
+                                fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = TextPrimary
                             )
 
                             Text(
-                                text = "Cukup masukkan nomor WhatsApp / HP Anda. Kami akan mengirimkan 6 digit kode OTP verifikasi tanpa perlu repot menghafal sandi.",
+                                text = "Masukkan nomor WhatsApp / HP Anda. Sistem akan otomatis memulihkan akun warga Anda melalui verifikasi kode OTP.",
                                 fontSize = 12.sp,
                                 color = TextSecondary,
                                 lineHeight = 17.sp
@@ -493,257 +442,13 @@ fun AuthScreen(
                                     )
                                 } else {
                                     Text(
-                                        text = "Kirim Kode OTP →",
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            }
-                        } else {
-                            // ==========================================
-                            // ✍️ TAHAP 2: DAFTAR WARGA LENGKAP
-                            // ==========================================
-                            Text(
-                                text = "Pendaftaran Warga Baru",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = TextPrimary
-                            )
-
-                            // Nama Lengkap Sesuai KTP
-                            OutlinedTextField(
-                                value = nama,
-                                onValueChange = { nama = it },
-                                label = { Text("Nama Lengkap (Sesuai KTP)") },
-                                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = PrimaryGreenDark) },
-                                singleLine = true,
-                                shape = RoundedCornerShape(12.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = PrimaryGreenDark,
-                                    unfocusedBorderColor = BorderLight
-                                ),
-                                modifier = Modifier.fillMaxWidth()
-                            )
-
-                            // NIK (16 Digit)
-                            OutlinedTextField(
-                                value = nik,
-                                onValueChange = { if (it.length <= 16 && it.all { c -> c.isDigit() }) nik = it },
-                                label = { Text("NIK (16 Digit)") },
-                                placeholder = { Text("3201xxxxxxxxxxxx") },
-                                leadingIcon = { Icon(Icons.Default.Badge, contentDescription = null, tint = PrimaryGreenDark) },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                singleLine = true,
-                                shape = RoundedCornerShape(12.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = PrimaryGreenDark,
-                                    unfocusedBorderColor = BorderLight
-                                ),
-                                modifier = Modifier.fillMaxWidth()
-                            )
-
-                            // No KK (16 Digit)
-                            OutlinedTextField(
-                                value = noKk,
-                                onValueChange = { if (it.length <= 16 && it.all { c -> c.isDigit() }) noKk = it },
-                                label = { Text("No. Kartu Keluarga (KK)") },
-                                placeholder = { Text("3201xxxxxxxxxxxx") },
-                                leadingIcon = { Icon(Icons.Default.Home, contentDescription = null, tint = PrimaryGreenDark) },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                singleLine = true,
-                                shape = RoundedCornerShape(12.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = PrimaryGreenDark,
-                                    unfocusedBorderColor = BorderLight
-                                ),
-                                modifier = Modifier.fillMaxWidth()
-                            )
-
-                            // Nomor HP / WhatsApp
-                            OutlinedTextField(
-                                value = phoneNumber,
-                                onValueChange = { phoneNumber = it },
-                                label = { Text("Nomor HP / WhatsApp Aktif") },
-                                placeholder = { Text("081234567890") },
-                                leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null, tint = PrimaryGreenDark) },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                                singleLine = true,
-                                shape = RoundedCornerShape(12.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = PrimaryGreenDark,
-                                    unfocusedBorderColor = BorderLight
-                                ),
-                                modifier = Modifier.fillMaxWidth()
-                            )
-
-                            // RT & RW
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
-                            ) {
-                                OutlinedTextField(
-                                    value = rt,
-                                    onValueChange = { rt = it },
-                                    label = { Text("RT") },
-                                    shape = RoundedCornerShape(12.dp),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = PrimaryGreenDark,
-                                        unfocusedBorderColor = BorderLight
-                                    ),
-                                    modifier = Modifier.weight(1f)
-                                )
-                                OutlinedTextField(
-                                    value = rw,
-                                    onValueChange = { rw = it },
-                                    label = { Text("RW") },
-                                    shape = RoundedCornerShape(12.dp),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = PrimaryGreenDark,
-                                        unfocusedBorderColor = BorderLight
-                                    ),
-                                    modifier = Modifier.weight(1f)
-                                )
-                            }
-
-                            // Alamat Rumah
-                            OutlinedTextField(
-                                value = alamat,
-                                onValueChange = { alamat = it },
-                                label = { Text("Alamat Rumah / Blok") },
-                                leadingIcon = { Icon(Icons.Default.Apartment, contentDescription = null, tint = PrimaryGreenDark) },
-                                singleLine = true,
-                                shape = RoundedCornerShape(12.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = PrimaryGreenDark,
-                                    unfocusedBorderColor = BorderLight
-                                ),
-                                modifier = Modifier.fillMaxWidth()
-                            )
-
-                            // Pekerjaan
-                            OutlinedTextField(
-                                value = pekerjaan,
-                                onValueChange = { pekerjaan = it },
-                                label = { Text("Pekerjaan / Profesi") },
-                                leadingIcon = { Icon(Icons.Default.Work, contentDescription = null, tint = PrimaryGreenDark) },
-                                singleLine = true,
-                                shape = RoundedCornerShape(12.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = PrimaryGreenDark,
-                                    unfocusedBorderColor = BorderLight
-                                ),
-                                modifier = Modifier.fillMaxWidth()
-                            )
-
-                            // Pilihan Peran/Jabatan
-                            ExposedDropdownMenuBox(
-                                expanded = roleExpanded,
-                                onExpandedChange = { roleExpanded = !roleExpanded },
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                OutlinedTextField(
-                                    value = role,
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    label = { Text("Peran / Jabatan di RT/RW") },
-                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = roleExpanded) },
-                                    leadingIcon = { Icon(Icons.Default.VerifiedUser, contentDescription = null, tint = PrimaryGreenDark) },
-                                    shape = RoundedCornerShape(12.dp),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = PrimaryGreenDark,
-                                        unfocusedBorderColor = BorderLight
-                                    ),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .menuAnchor(MenuAnchorType.PrimaryNotEditable, true)
-                                )
-                                ExposedDropdownMenu(
-                                    expanded = roleExpanded,
-                                    onDismissRequest = { roleExpanded = false }
-                                ) {
-                                    listOf("Warga", "Ketua RT", "Ketua RW", "Sekretaris RT/RW", "Bendahara RT/RW", "Seksi Keamanan").forEach { r ->
-                                        DropdownMenuItem(
-                                            text = { Text(r) },
-                                            onClick = {
-                                                role = r
-                                                roleExpanded = false
-                                            }
-                                        )
-                                    }
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(4.dp))
-
-                            // Tombol Submit Pendaftaran
-                            Button(
-                                onClick = {
-                                    if (activity != null) {
-                                        viewModel.registerFullProfile(
-                                            activity = activity,
-                                            nama = nama,
-                                            nik = nik,
-                                            noKk = noKk,
-                                            telepon = phoneNumber,
-                                            rt = rt,
-                                            rw = rw,
-                                            alamat = alamat,
-                                            pekerjaan = pekerjaan,
-                                            role = role
-                                        )
-                                    }
-                                },
-                                enabled = !uiState.isAuthLoading && nama.isNotBlank() && phoneNumber.length >= 9 && nik.length == 16,
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = PrimaryGreenDark,
-                                    contentColor = Color.White
-                                ),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(48.dp)
-                            ) {
-                                if (uiState.isAuthLoading) {
-                                    CircularProgressIndicator(
-                                        color = Color.White,
-                                        modifier = Modifier.size(20.dp),
-                                        strokeWidth = 2.dp
-                                    )
-                                } else {
-                                    Text(
-                                        text = "Daftar & Verifikasi No. HP →",
+                                        text = "Lanjut & Kirim Kode OTP →",
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.Bold
                                     )
                                 }
                             }
                         }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // Footer Helper Link
-                if (!isOtpStep) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = if (isRegister) "Sudah pernah mendaftar?" else "Belum terdaftar sebagai warga?",
-                            fontSize = 12.sp,
-                            color = TextSecondary
-                        )
-                        Spacer(modifier = Modifier.width(5.dp))
-                        Text(
-                            text = if (isRegister) "Masuk dengan No. HP" else "Daftar Warga Baru",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = PrimaryGreenDark,
-                            modifier = Modifier.clickable {
-                                viewModel.setAuthMode(if (isRegister) "LOGIN" else "REGISTER")
-                            }
-                        )
                     }
                 }
 

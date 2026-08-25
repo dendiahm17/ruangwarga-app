@@ -5,6 +5,14 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -53,13 +61,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.ui.draw.shadow
 import com.example.ui.theme.AccentGreen
+import com.example.ui.theme.AccentGreenDark
 import com.example.ui.theme.AccentGreenLight
 import com.example.ui.theme.AccentOrange
+import com.example.ui.theme.AccentOrangeDark
 import com.example.ui.theme.AccentOrangeLight
 import com.example.ui.theme.AccentPurple
 import com.example.ui.theme.AccentPurpleLight
 import com.example.ui.theme.AccentRed
+import com.example.ui.theme.AccentRedDark
 import com.example.ui.theme.AccentRedLight
 import com.example.ui.theme.BorderLight
 import com.example.ui.theme.PrimaryBlue
@@ -68,6 +84,8 @@ import com.example.ui.theme.PrimaryBlueLight
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
 import com.example.ui.theme.TextTertiary
+
+import androidx.compose.foundation.layout.statusBarsPadding
 
 @Composable
 fun AppHeader(
@@ -81,11 +99,16 @@ fun AppHeader(
     isAdminMode: Boolean = false,
     onAdminToggle: (() -> Unit)? = null
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .statusBarsPadding(),
+        color = Color.White
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 12.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -94,7 +117,7 @@ fun AppHeader(
                     IconButton(
                         onClick = onBackClick,
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(36.dp)
                             .testTag("header_back_button")
                     ) {
                         Icon(
@@ -103,128 +126,365 @@ fun AppHeader(
                             tint = TextPrimary
                         )
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                 }
                 Text(
                     text = title,
-                    fontSize = 22.sp,
+                    fontSize = 19.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
                 )
             }
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (onAdminToggle != null) {
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(if (isAdminMode) Color(0xFFFFECEC) else Color(0xFFE8F0FE))
-                            .border(1.dp, if (isAdminMode) AccentRed.copy(alpha = 0.5f) else PrimaryBlue.copy(alpha = 0.3f), RoundedCornerShape(20.dp))
-                            .clickable(onClick = onAdminToggle)
-                            .padding(horizontal = 10.dp, vertical = 6.dp)
-                            .testTag("btn_toggle_admin_mode"),
-                        contentAlignment = Alignment.Center
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(if (isAdminMode) AccentOrange.copy(alpha = 0.15f) else Color(0xFFF1F5F9))
+                            .clickable { onAdminToggle() }
+                            .padding(horizontal = 10.dp, vertical = 5.dp)
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = if (isAdminMode) Icons.Default.AdminPanelSettings else Icons.Default.Shield,
-                                contentDescription = "Mode",
-                                tint = if (isAdminMode) AccentRed else PrimaryBlue,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = if (isAdminMode) "Pengurus RT" else "Warga",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (isAdminMode) AccentRed else PrimaryBlue
-                            )
-                        }
+                        Text(
+                            text = if (isAdminMode) "👑 Admin" else "Warga",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isAdminMode) AccentOrangeDark else TextSecondary
+                        )
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
                 }
 
                 if (rightActionIcon != null) {
                     IconButton(
                         onClick = onRightActionClick,
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(imageVector = rightActionIcon, contentDescription = null, tint = TextPrimary)
+                    }
+                }
+
+                if (unreadCount > 0) {
+                    Box(
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(36.dp)
                             .clip(CircleShape)
-                            .background(Color.White)
-                            .border(1.dp, BorderLight, CircleShape)
-                            .testTag("header_right_action")
+                            .background(Color(0xFFF1F5F9))
+                            .clickable { onNotificationClick() },
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = rightActionIcon,
-                            contentDescription = "Action",
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = "Notifikasi",
                             tint = TextPrimary,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(18.dp)
                         )
-                    }
-                } else {
-                    IconButton(
-                        onClick = onNotificationClick,
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(Color.White)
-                            .border(1.dp, BorderLight, CircleShape)
-                            .testTag("header_notification_button")
-                    ) {
-                        BadgedBox(
-                            badge = {
-                                if (unreadCount > 0) {
-                                    Box(
-                                        modifier = Modifier
-                                            .offset(x = 2.dp, y = (-2).dp)
-                                            .size(16.dp)
-                                            .clip(CircleShape)
-                                            .background(AccentRed),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = unreadCount.toString(),
-                                            color = Color.White,
-                                            fontSize = 9.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                }
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Notifications,
-                                contentDescription = "Notifikasi",
-                                tint = TextPrimary,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .align(Alignment.TopEnd)
+                                .offset(x = (-3).dp, y = 3.dp)
+                                .clip(CircleShape)
+                                .background(AccentRed)
+                        )
                     }
                 }
             }
         }
+    }
+}
 
-        if (isAdminMode) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 2.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFFFFF3CD))
-                    .padding(horizontal = 12.dp, vertical = 6.dp)
+/**
+ * ElevatedTopHeader - Top Nav Bar Kompak Penuh Menempel Horizontal Mentok Batas Indikator Sistem
+ */
+@Composable
+fun ElevatedTopHeader(
+    cloudSyncStatus: String,
+    unreadNotifications: Int,
+    isSirenActive: Boolean,
+    hasActiveEmergency: Boolean = false,
+    onSyncClick: () -> Unit,
+    onInboxClick: () -> Unit,
+    onEmergencyClick: () -> Unit,
+    onSilenceSirenClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    // Animasi Pulse Halus untuk Titik Indikator Koneksi
+    val infiniteTransition = androidx.compose.animation.core.rememberInfiniteTransition(label = "pulse_sync")
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 0.85f,
+        targetValue = 1.25f,
+        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+            animation = androidx.compose.animation.core.tween(durationMillis = 1200, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
+        ),
+        label = "pulse_scale"
+    )
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.4f,
+        targetValue = 1f,
+        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+            animation = androidx.compose.animation.core.tween(durationMillis = 1200, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
+        ),
+        label = "pulse_alpha"
+    )
+
+    // Animasi Intensif / Getar Interaktif untuk Alarm Darurat saat Aktif
+    val isEmergencyTriggered = hasActiveEmergency || isSirenActive
+    val alarmTransition = androidx.compose.animation.core.rememberInfiniteTransition(label = "alarm_anim")
+    val alarmScale by alarmTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = if (isEmergencyTriggered) 1.25f else 1f,
+        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+            animation = androidx.compose.animation.core.tween(durationMillis = 450, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
+        ),
+        label = "alarm_scale"
+    )
+    val alarmRippleScale by alarmTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = if (isEmergencyTriggered) 1.55f else 1f,
+        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+            animation = androidx.compose.animation.core.tween(durationMillis = 600, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+            repeatMode = androidx.compose.animation.core.RepeatMode.Restart
+        ),
+        label = "alarm_ripple_scale"
+    )
+    val alarmRippleAlpha by alarmTransition.animateFloat(
+        initialValue = if (isEmergencyTriggered) 0.6f else 0f,
+        targetValue = 0f,
+        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+            animation = androidx.compose.animation.core.tween(durationMillis = 600, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+            repeatMode = androidx.compose.animation.core.RepeatMode.Restart
+        ),
+        label = "alarm_ripple_alpha"
+    )
+
+    val indicatorColor = when (cloudSyncStatus) {
+        "Tersinkronisasi ke Cloud" -> AccentGreen
+        "Menyinkronkan..." -> AccentOrange
+        else -> Color.Gray
+    }
+
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .statusBarsPadding(),
+        color = Color.White
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Logo & Titik Indikator Koneksi Sejajar Kompak
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.clickable { onSyncClick() }
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Default.AdminPanelSettings, contentDescription = null, tint = Color(0xFF856404), modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "Mode Pengurus RT Aktif: Anda dapat memverifikasi iuran, menyetujui surat & menanggapi pengaduan.",
-                        fontSize = 11.sp,
-                        color = Color(0xFF856404),
-                        fontWeight = FontWeight.Medium
+                Text(text = "🌿", fontSize = 18.sp)
+                Spacer(modifier = Modifier.width(5.dp))
+                Text(
+                    text = "RuangWarga",
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color(0xFF1E3A8A)
+                )
+                Spacer(modifier = Modifier.width(7.dp))
+
+                // Titik Indikator Koneksi Hidup (Animated Pulse Dot)
+                Box(
+                    modifier = Modifier.size(14.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    // Glow / Ripple effect
+                    Box(
+                        modifier = Modifier
+                            .size(12.dp * pulseScale)
+                            .clip(CircleShape)
+                            .background(indicatorColor.copy(alpha = 0.25f * pulseAlpha))
+                    )
+                    // Core solid dot
+                    Box(
+                        modifier = Modifier
+                            .size(6.5.dp)
+                            .clip(CircleShape)
+                            .background(indicatorColor)
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(4.dp))
+
+            // Right Header Action Icons: Kotak Masuk & Darurat Kompak
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                // Tombol Matikan Sirine jika sedang berbunyi serentak
+                if (isSirenActive) {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = AccentRed,
+                        modifier = Modifier.clickable { onSilenceSirenClick() }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = "🔇", fontSize = 10.sp)
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text(text = "Matikan", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
+                    }
+                }
+
+                // Kotak Masuk Button Kompak
+                Box(
+                    modifier = Modifier
+                        .size(34.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFF8FAFC))
+                        .border(1.dp, Color(0xFFE2E8F0), CircleShape)
+                        .clickable { onInboxClick() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Notifications,
+                        contentDescription = "Kotak Masuk",
+                        tint = TextPrimary,
+                        modifier = Modifier.size(17.dp)
+                    )
+                    if (unreadNotifications > 0) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .align(Alignment.TopEnd)
+                                .offset(x = (-3).dp, y = 3.dp)
+                                .clip(CircleShape)
+                                .background(AccentRed)
+                                .border(1.dp, Color.White, CircleShape)
+                        )
+                    }
+                }
+
+                // Tombol Darurat Siren Interaktif dengan Animasi Pulse / Ripple
+                Box(
+                    modifier = Modifier.size(38.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (isEmergencyTriggered) {
+                        // Outer animated warning ring
+                        Box(
+                            modifier = Modifier
+                                .size(34.dp * alarmRippleScale)
+                                .clip(CircleShape)
+                                .background(AccentRed.copy(alpha = alarmRippleAlpha))
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .size(if (isEmergencyTriggered) 34.dp * alarmScale else 34.dp)
+                            .clip(CircleShape)
+                            .background(if (isEmergencyTriggered) Color(0xFFFEE2E2) else Color(0xFFFEF2F2))
+                            .border(
+                                1.2.dp,
+                                if (isEmergencyTriggered) AccentRed else Color(0xFFFCA5A5),
+                                CircleShape
+                            )
+                            .clickable { onEmergencyClick() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "🚨",
+                            fontSize = if (isEmergencyTriggered) 16.sp else 15.sp
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * ElevatedSirenActiveBanner - Banner melayang darurat serentak dengan tombol henti dan rute respons
+ */
+@Composable
+fun ElevatedSirenActiveBanner(
+    title: String,
+    location: String,
+    onSilenceClick: () -> Unit,
+    onOpenDetailClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .shadow(12.dp, RoundedCornerShape(18.dp), spotColor = Color(0x35DC2626)),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2)),
+        border = BorderStroke(1.5.dp, Color(0xFFEF4444))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = "🚨", fontSize = 18.sp)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Column {
+                        Text(
+                            text = "SIRINE DARURAT AKTIF SERENTAK!",
+                            fontSize = 12.5.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color(0xFF991B1B)
+                        )
+                        Text(
+                            text = "$title • Lokasi: $location",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF7F1D1D)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = onSilenceClick,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(34.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE2E8F0))
+                ) {
+                    Text(text = "🔇 Matikan Bunyi", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                }
+
+                Button(
+                    onClick = onOpenDetailClick,
+                    modifier = Modifier
+                        .weight(1.2f)
+                        .height(34.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626))
+                ) {
+                    Text(text = "🚨 Buka Pusat Alarm", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                }
+            }
         }
     }
 }

@@ -117,330 +117,154 @@ fun HomeScreen(
     var likesCount by remember { mutableIntStateOf(73) }
     var isLiked by remember { mutableStateOf(false) }
 
-    LazyColumn(
+    Column(
         modifier = modifier
             .fillMaxSize()
-            .background(BackgroundLight)
-            .padding(horizontal = 16.dp, vertical = 10.dp)
-            .testTag("home_screen_redesigned"),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+            .background(Color.White)
     ) {
         // ============================================================
-        // 1. TOP BRAND HEADER: RuangWarga | RT 03 / RW 02 | Darurat & Akun
+        // 1. TOP BRAND HEADER MENEMPEL FULL SECARA HORIZONTAL (NATIVE APP BAR)
         // ============================================================
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Logo & Subtitle
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = "🌿", fontSize = 18.sp)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "RuangWarga",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = PrimaryGreenDark
-                        )
-                    }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.clickable { viewModel.syncAllDataToCloud() }
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(7.dp)
-                                .clip(CircleShape)
-                                .background(
-                                    when (uiState.cloudSyncStatus) {
-                                        "Tersinkronisasi ke Cloud" -> AccentGreen
-                                        "Menyinkronkan..." -> AccentOrange
-                                        else -> Color.Gray
-                                    }
-                                )
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "RT 03 / RW 02 • ${uiState.cloudSyncStatus}",
-                            fontSize = 10.5.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = TextSecondary
-                        )
-                    }
+        val activeAlert = uiState.emergencyAlerts.firstOrNull { it.status == "Aktif" }
+        com.example.ui.components.ElevatedTopHeader(
+            cloudSyncStatus = uiState.cloudSyncStatus,
+            unreadNotifications = uiState.unreadNotifications,
+            isSirenActive = uiState.isEmergencySirenActive,
+            hasActiveEmergency = activeAlert != null,
+            onSyncClick = { viewModel.syncAllDataToCloud() },
+            onInboxClick = { viewModel.openNotificationsSheet() },
+            onEmergencyClick = {
+                if (activeAlert != null) {
+                    viewModel.openEmergencyAlarmDetail(activeAlert)
+                } else {
+                    viewModel.openEmergencyAlarmSheet()
                 }
+            },
+            onSilenceSirenClick = { viewModel.silenceSirenSound() }
+        )
 
-                // Right Header Icons: Kotak Masuk (Mail Icon) & Darurat (Red Siren) - Tanpa Label
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    // Kotak Masuk (Inbox / Pesan Warga Icon Button)
-                    Box(
-                        modifier = Modifier
-                            .size(38.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFF1F5F9))
-                            .clickable { viewModel.openNotificationsSheet() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Email,
-                            contentDescription = "Kotak Masuk",
-                            tint = TextPrimary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        if (uiState.unreadNotifications > 0) {
-                            Box(
-                                modifier = Modifier
-                                    .size(9.dp)
-                                    .align(Alignment.TopEnd)
-                                    .offset(x = (-4).dp, y = 4.dp)
-                                    .clip(CircleShape)
-                                    .background(AccentRed)
-                                    .border(1.5.dp, Color.White, CircleShape)
-                            )
-                        }
-                    }
-
-                    // Darurat Siren Button
-                    Box(
-                        modifier = Modifier
-                            .size(38.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFFEE2E2))
-                            .clickable { viewModel.openEmergencyAlarmSheet() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(text = "🚨", fontSize = 17.sp)
-                    }
-                }
-            }
-        }
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .testTag("home_screen_redesigned")
+        ) {
 
         // ============================================================
         // BANNER LENGKAPI DATA KEPENDUDUKAN (Jika Warga Baru Belum Isi NIK/Nama)
         // ============================================================
         if (uiState.profile.nama.isBlank() || uiState.profile.nik.isBlank()) {
             item {
-                Card(
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .shadow(3.dp, RoundedCornerShape(16.dp), spotColor = Color(0x15000000))
-                        .clickable { viewModel.openPersonalDataSheet() },
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFEFF6FF)),
-                    border = BorderStroke(1.2.dp, Color(0xFFBFDBFE))
+                        .background(Color(0xFFEFF6FF))
+                        .clickable { viewModel.openPersonalDataSheet() }
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFDBEAFE)),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFFDBEAFE)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(text = "📋", fontSize = 18.sp)
-                        }
+                        Text(text = "📋", fontSize = 16.sp)
+                    }
 
-                        Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
 
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Lengkapi Data Kependudukan Anda",
-                                fontSize = 13.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF1E40AF)
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "Isi NIK, No. KK & Alamat untuk mengaktifkan seluruh layanan RT/RW →",
-                                fontSize = 11.sp,
-                                color = Color(0xFF3B82F6)
-                            )
-                        }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Lengkapi Data Kependudukan Anda",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF1E40AF)
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "Isi NIK, No. KK & Alamat untuk mengaktifkan seluruh layanan RT/RW →",
+                            fontSize = 11.sp,
+                            color = Color(0xFF3B82F6)
+                        )
                     }
                 }
+                HorizontalDivider(thickness = 0.8.dp, color = Color(0xFFE2E8F0))
             }
         }
 
         // ============================================================
-        // 2. KARTU INFORMASI PESAN DARURAT WARGA (Tampil Ringkas: Judul & Pesan Pemicu Klik ke Detail)
-        // ============================================================
-        val activeAlert = uiState.emergencyAlerts.firstOrNull { it.status == "Aktif" }
-        if (activeAlert != null) {
-            item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .shadow(4.dp, RoundedCornerShape(16.dp), spotColor = Color(0x30DC2626))
-                        .clickable { viewModel.openEmergencyAlarmDetail(activeAlert) },
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = BorderStroke(1.2.dp, Color(0xFFFCA5A5))
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Siren Pulse Icon
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFFFEE2E2)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(text = "🚨", fontSize = 16.sp)
-                        }
-
-                        Spacer(modifier = Modifier.width(12.dp))
-
-                        // Judul & Pesan Singkat Pemicu Klik
-                        Column(modifier = Modifier.weight(1f)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = activeAlert.judul.ifBlank { activeAlert.jenisDarurat },
-                                    fontSize = 13.5.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF991B1B),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Surface(
-                                    shape = RoundedCornerShape(4.dp),
-                                    color = AccentRed
-                                ) {
-                                    Text(
-                                        text = "SIAGA",
-                                        fontSize = 8.5.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White,
-                                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(2.dp))
-
-                            Text(
-                                text = "⚠️ Ketuk di sini untuk info situasi & bantu relawan →",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = Color(0xFFB91C1C)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.width(6.dp))
-
-                        // Arrow Icon Indicator
-                        Box(
-                            modifier = Modifier
-                                .size(28.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFFFFF1F2)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                contentDescription = "Buka Detail",
-                                tint = AccentRedDark,
-                                modifier = Modifier.size(15.dp)
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        // ============================================================
-        // 3. KEGIATAN TERDEKAT CARD (Dynamic Real Data)
+        // 2. KEGIATAN TERDEKAT (Flat Seamless Section)
         // ============================================================
         if (nearestEvent != null) {
             item {
-                Card(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .shadow(3.dp, RoundedCornerShape(16.dp), spotColor = Color(0x15000000)),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = BorderStroke(1.dp, BorderLight)
+                        .padding(horizontal = 16.dp, vertical = 14.dp)
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp)
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = Color(0xFFDCFCE7)
                     ) {
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = Color(0xFFDCFCE7)
-                        ) {
-                            Text(
-                                text = "Kegiatan Terdekat",
-                                fontSize = 10.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = PrimaryGreenDark,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(6.dp))
-
                         Text(
-                            text = nearestEvent.judul,
-                            fontSize = 16.sp,
+                            text = "Kegiatan Terdekat",
+                            fontSize = 10.5.sp,
                             fontWeight = FontWeight.Bold,
-                            color = TextPrimary
+                            color = PrimaryGreenDark,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                         )
+                    }
 
-                        Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(text = "📅", fontSize = 12.sp)
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(text = nearestEvent.tanggal, fontSize = 11.5.sp, color = TextSecondary)
-                                }
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(text = "⏱", fontSize = 12.sp)
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(text = nearestEvent.waktu, fontSize = 11.5.sp, color = TextSecondary)
-                                }
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(text = "📍", fontSize = 12.sp)
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(text = nearestEvent.lokasi, fontSize = 11.5.sp, color = TextSecondary)
-                                }
+                    Text(
+                        text = nearestEvent.judul,
+                        fontSize = 15.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(text = "📅", fontSize = 12.sp)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(text = nearestEvent.tanggal, fontSize = 11.5.sp, color = TextSecondary)
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(text = "⏱", fontSize = 12.sp)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(text = nearestEvent.waktu, fontSize = 11.5.sp, color = TextSecondary)
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(text = "📍", fontSize = 12.sp)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(text = nearestEvent.lokasi, fontSize = 11.5.sp, color = TextSecondary)
                             }
                         }
                     }
                 }
+                HorizontalDivider(thickness = 0.8.dp, color = Color(0xFFF1F5F9))
             }
         }
 
         // ============================================================
-        // 4. UNTUK ANDA SECTION (Surat/Pengumuman Terbaru Real)
+        // 4. UNTUK ANDA SECTION (Surat/Pengumuman Terbaru Flat)
         // ============================================================
         if (uiState.letters.isNotEmpty() || uiState.announcements.isNotEmpty()) {
             item {
-                Column(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -463,230 +287,213 @@ fun HomeScreen(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     uiState.letters.firstOrNull()?.let { latestLetter ->
-                        Card(
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { viewModel.openSuratScreenSheet() },
-                            shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F5F9))
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color(0xFFF8FAFC))
+                                .clickable { viewModel.openSuratScreenSheet() }
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
+                            Box(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 12.dp, vertical = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                    .size(30.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color(0xFFDCFCE7)),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(30.dp)
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(Color(0xFFDCFCE7)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(text = "📄", fontSize = 14.sp)
-                                }
+                                Text(text = "📄", fontSize = 14.sp)
+                            }
 
-                                Spacer(modifier = Modifier.width(10.dp))
+                            Spacer(modifier = Modifier.width(10.dp))
 
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "${latestLetter.jenisSurat} - ${latestLetter.status}",
-                                        fontSize = 12.5.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = TextPrimary
-                                    )
-                                    Text(
-                                        text = latestLetter.keperluan,
-                                        fontSize = 10.5.sp,
-                                        color = TextSecondary,
-                                        maxLines = 1
-                                    )
-                                }
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "${latestLetter.jenisSurat} - ${latestLetter.status}",
+                                    fontSize = 12.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextPrimary
+                                )
+                                Text(
+                                    text = latestLetter.keperluan,
+                                    fontSize = 10.5.sp,
+                                    color = TextSecondary,
+                                    maxLines = 1
+                                )
                             }
                         }
                     }
                 }
+                HorizontalDivider(thickness = 0.8.dp, color = Color(0xFFF1F5F9))
             }
         }
 
         // ============================================================
-        // 5. COMMUNITY POST FEED LIST (Dynamic Real Posts)
+        // 5. COMMUNITY POST FEED LIST (Flat Seamless Post Feed)
         // ============================================================
         if (uiState.customFeedPosts.isEmpty()) {
             item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = BorderStroke(1.dp, BorderLight)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(text = "📝", fontSize = 32.sp)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Belum Ada Postingan Warga",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = TextPrimary
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Gunakan tombol di atas untuk membuat kabar warga, usulan, atau kegiatan baru!",
-                            fontSize = 11.5.sp,
-                            color = TextSecondary,
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                        )
-                    }
+                    Text(text = "📝", fontSize = 32.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Belum Ada Postingan Warga",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Gunakan tombol Buat di bawah untuk membuat kabar warga, usulan, atau kegiatan baru!",
+                        fontSize = 11.5.sp,
+                        color = TextSecondary,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
                 }
             }
         }
 
-        // Render Custom Posts yang dibuat oleh warga/pengurus
+        // Render Custom Posts yang dibuat oleh warga/pengurus (Flat Seamless Feed Item)
         items(uiState.customFeedPosts) { customPost ->
             val customTemplate = findBannerTemplateById(customPost.bannerTemplateId)
                 ?: getDefaultBannerTemplateForType(customPost.category)
             var postLiked by remember { mutableStateOf(customPost.isLiked) }
             var postLikesCount by remember { mutableIntStateOf(customPost.likesCount) }
 
-            Card(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { viewModel.openPostDetail(customPost) },
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = BorderStroke(1.dp, BorderLight)
+                    .clickable { viewModel.openPostDetail(customPost) }
+                    .padding(horizontal = 16.dp, vertical = 14.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(14.dp)
+                // Author Header
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Author Header
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(CircleShape)
-                                    .background(PrimaryGreenDark),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
-                            }
-
-                            Spacer(modifier = Modifier.width(10.dp))
-
-                            Column {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        text = customPost.authorName,
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = TextPrimary
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(text = "✨", fontSize = 11.sp)
-                                }
-                                Text(
-                                    text = "${customPost.timeAgo} • ${customPost.category}",
-                                    fontSize = 10.5.sp,
-                                    color = TextSecondary
-                                )
-                            }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(PrimaryGreenDark),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
                         }
 
-                        IconButton(onClick = {}, modifier = Modifier.size(24.dp)) {
-                            Icon(imageVector = Icons.Default.MoreHoriz, contentDescription = null, tint = TextTertiary)
+                        Spacer(modifier = Modifier.width(10.dp))
+
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = customPost.authorName,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextPrimary
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(text = "✨", fontSize = 11.sp)
+                            }
+                            Text(
+                                text = "${customPost.timeAgo} • ${customPost.category}",
+                                fontSize = 10.5.sp,
+                                color = TextSecondary
+                            )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    IconButton(onClick = {}, modifier = Modifier.size(24.dp)) {
+                        Icon(imageVector = Icons.Default.MoreHoriz, contentDescription = null, tint = TextTertiary)
+                    }
+                }
 
-                    // Interaktif Template Banner Postingan
-                    PostInteractiveBanner(
-                        template = customTemplate,
-                        customTitle = customPost.title,
-                        height = 105,
-                        onClick = { viewModel.openPostDetail(customPost) }
-                    )
+                Spacer(modifier = Modifier.height(10.dp))
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                // Interaktif Template Banner Postingan
+                PostInteractiveBanner(
+                    template = customTemplate,
+                    customTitle = customPost.title,
+                    height = 105,
+                    onClick = { viewModel.openPostDetail(customPost) }
+                )
 
-                    Text(
-                        text = customPost.content,
-                        fontSize = 12.5.sp,
-                        color = TextPrimary,
-                        lineHeight = 17.sp
-                    )
+                Spacer(modifier = Modifier.height(10.dp))
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = customPost.content,
+                    fontSize = 12.5.sp,
+                    color = TextPrimary,
+                    lineHeight = 17.sp
+                )
 
-                    // Action Counters
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Action Counters
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .clickable {
+                                postLiked = !postLiked
+                                postLikesCount += if (postLiked) 1 else -1
+                            }
+                            .padding(end = 18.dp)
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .clickable {
-                                    postLiked = !postLiked
-                                    postLikesCount += if (postLiked) 1 else -1
-                                }
-                                .padding(end = 18.dp)
-                        ) {
-                            Icon(
-                                imageVector = if (postLiked) Icons.Default.Favorite else Icons.Outlined.FavoriteBorder,
-                                contentDescription = "Like",
-                                tint = if (postLiked) AccentRed else TextSecondary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(text = "$postLikesCount", fontSize = 11.5.sp, color = TextSecondary)
-                        }
+                        Icon(
+                            imageVector = if (postLiked) Icons.Default.Favorite else Icons.Outlined.FavoriteBorder,
+                            contentDescription = "Like",
+                            tint = if (postLiked) AccentRed else TextSecondary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(text = "$postLikesCount", fontSize = 11.5.sp, color = TextSecondary)
+                    }
 
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .clickable { viewModel.openPostDetail(customPost) }
-                                .padding(end = 18.dp)
-                        ) {
-                            Icon(imageVector = Icons.Outlined.ChatBubbleOutline, contentDescription = "Comment", tint = TextSecondary, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(text = "${customPost.commentsCount}", fontSize = 11.5.sp, color = TextSecondary)
-                        }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .clickable { viewModel.openPostDetail(customPost) }
+                            .padding(end = 18.dp)
+                    ) {
+                        Icon(imageVector = Icons.Outlined.ChatBubbleOutline, contentDescription = "Comment", tint = TextSecondary, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(text = "${customPost.commentsCount}", fontSize = 11.5.sp, color = TextSecondary)
+                    }
 
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.clickable { Toast.makeText(context, "Tautan postingan disalin", Toast.LENGTH_SHORT).show() }
-                        ) {
-                            Icon(imageVector = Icons.Default.Repeat, contentDescription = "Share", tint = TextSecondary, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(text = "Bantu Sebarkan", fontSize = 10.5.sp, color = TextSecondary)
-                        }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable { Toast.makeText(context, "Tautan postingan disalin", Toast.LENGTH_SHORT).show() }
+                    ) {
+                        Icon(imageVector = Icons.Default.Repeat, contentDescription = "Share", tint = TextSecondary, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(text = "Bantu Sebarkan", fontSize = 10.5.sp, color = TextSecondary)
                     }
                 }
             }
+            HorizontalDivider(thickness = 0.8.dp, color = Color(0xFFF1F5F9))
         }
 
         item {
             Spacer(modifier = Modifier.height(80.dp))
         }
     }
+}
 }
 
 @Composable

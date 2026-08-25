@@ -97,10 +97,43 @@ class AuthRepository(private val db: AppDatabase) {
                 UUID.randomUUID().toString()
             }
 
-            // Ambil profil dari Cloud Firestore
+            // Ambil profil dari Cloud Firestore dengan multi-format lookup
             var existingProfile: ResidentProfileEntity? = null
             try {
-                val doc = firestore.collection("users").document(formattedPhone).get().await()
+                // 1. Coba document ID formattedPhone (+628xxx)
+                var doc = firestore.collection("users").document(formattedPhone).get().await()
+                
+                // 2. Coba document ID raw phone jika belum ketemu
+                if (!doc.exists()) {
+                    val rawDigits = phone.replace(Regex("[^0-9]"), "").trim()
+                    doc = firestore.collection("users").document(rawDigits).get().await()
+                }
+
+                // 3. Coba query field telepon jika document ID berbeda
+                if (!doc.exists()) {
+                    val querySnap = firestore.collection("users")
+                        .whereEqualTo("telepon", formattedPhone)
+                        .limit(1)
+                        .get()
+                        .await()
+                    if (!querySnap.isEmpty) {
+                        doc = querySnap.documents[0]
+                    }
+                }
+
+                // 4. Coba query field telepon dengan format 08xx
+                if (!doc.exists()) {
+                    val local08Phone = if (formattedPhone.startsWith("+62")) "0" + formattedPhone.substring(3) else formattedPhone
+                    val querySnap2 = firestore.collection("users")
+                        .whereEqualTo("telepon", local08Phone)
+                        .limit(1)
+                        .get()
+                        .await()
+                    if (!querySnap2.isEmpty) {
+                        doc = querySnap2.documents[0]
+                    }
+                }
+
                 if (doc.exists()) {
                     existingProfile = ResidentProfileEntity(
                         id = 1,
@@ -138,23 +171,24 @@ class AuthRepository(private val db: AppDatabase) {
 
             db.residentProfileDao().insertOrUpdateProfile(profile)
 
-            // Simpan sinkronisasi ke Cloud Firestore
+            // Update lastLogin dan metadata ke Cloud Firestore tanpa menimpa data yang sudah ada
             try {
-                val firestoreData = hashMapOf(
+                val loginMetadata = hashMapOf<String, Any>(
                     "uid" to profile.uid,
-                    "nama" to profile.nama,
-                    "nik" to profile.nik,
-                    "noKk" to profile.noKk,
-                    "telepon" to profile.telepon,
-                    "rt" to profile.rt,
-                    "rw" to profile.rw,
-                    "alamat" to profile.alamat,
-                    "pekerjaan" to profile.pekerjaan,
-                    "email" to profile.email,
-                    "role" to profile.role,
+                    "telepon" to formattedPhone,
                     "lastLogin" to System.currentTimeMillis()
                 )
-                firestore.collection("users").document(formattedPhone).set(firestoreData, SetOptions.merge()).await()
+                if (profile.nama.isNotBlank()) loginMetadata["nama"] = profile.nama
+                if (profile.nik.isNotBlank()) loginMetadata["nik"] = profile.nik
+                if (profile.noKk.isNotBlank()) loginMetadata["noKk"] = profile.noKk
+                if (profile.alamat.isNotBlank()) loginMetadata["alamat"] = profile.alamat
+                if (profile.pekerjaan.isNotBlank()) loginMetadata["pekerjaan"] = profile.pekerjaan
+                if (profile.email.isNotBlank()) loginMetadata["email"] = profile.email
+                if (profile.role.isNotBlank()) loginMetadata["role"] = profile.role
+                if (profile.rt.isNotBlank()) loginMetadata["rt"] = profile.rt
+                if (profile.rw.isNotBlank()) loginMetadata["rw"] = profile.rw
+
+                firestore.collection("users").document(formattedPhone).set(loginMetadata, SetOptions.merge()).await()
             } catch (e: Exception) {
                 android.util.Log.e("RuangWargaAuth", "Firestore write error: ${e.message}")
             }
@@ -225,27 +259,37 @@ class AuthRepository(private val db: AppDatabase) {
     suspend fun saveCompleteProfile(profile: ResidentProfileEntity): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             val formattedPhone = formatIndonesianPhone(profile.telepon)
+            val rawDigits = profile.telepon.replace(Regex("[^0-9]"), "").trim()
+            val local08Phone = if (formattedPhone.startsWith("+62")) "0" + formattedPhone.substring(3) else formattedPhone
+
             val updated = profile.copy(telepon = formattedPhone)
             db.residentProfileDao().insertOrUpdateProfile(updated)
 
+            val firestoreData = hashMapOf(
+                "uid" to updated.uid,
+                "nama" to updated.nama.trim(),
+                "nik" to updated.nik.trim(),
+                "noKk" to updated.noKk.trim(),
+                "telepon" to formattedPhone,
+                "teleponAlt" to local08Phone,
+                "rt" to updated.rt.trim(),
+                "rw" to updated.rw.trim(),
+                "alamat" to updated.alamat.trim(),
+                "pekerjaan" to updated.pekerjaan.trim(),
+                "email" to updated.email.trim(),
+                "role" to updated.role.trim(),
+                "updatedAt" to System.currentTimeMillis()
+            )
+
+            // Simpan ke key +628xxx (utama) dan 08xxx (alternatif) agar pencarian di Firestore selalu cocok
             try {
-                val firestoreData = hashMapOf(
-                    "uid" to updated.uid,
-                    "nama" to updated.nama,
-                    "nik" to updated.nik,
-                    "noKk" to updated.noKk,
-                    "telepon" to updated.telepon,
-                    "rt" to updated.rt,
-                    "rw" to updated.rw,
-                    "alamat" to updated.alamat,
-                    "pekerjaan" to updated.pekerjaan,
-                    "email" to updated.email,
-                    "role" to updated.role,
-                    "updatedAt" to System.currentTimeMillis()
-                )
                 firestore.collection("users").document(formattedPhone).set(firestoreData, SetOptions.merge()).await()
+                if (local08Phone != formattedPhone) {
+                    firestore.collection("users").document(local08Phone).set(firestoreData, SetOptions.merge()).await()
+                }
+                android.util.Log.d("RuangWargaAuth", "Data profil lengkap berhasil terunggah ke Cloud Firestore untuk $formattedPhone")
             } catch (e: Exception) {
-                android.util.Log.e("RuangWargaAuth", "Gagal upload profile: ${e.message}")
+                android.util.Log.e("RuangWargaAuth", "Gagal upload profile ke Firestore: ${e.message}", e)
             }
             Result.success(Unit)
         } catch (e: Exception) {
