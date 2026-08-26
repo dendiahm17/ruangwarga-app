@@ -2,6 +2,7 @@ package com.example.ui.dialogs
 
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -22,6 +23,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.graphics.Brush
+import com.example.ui.theme.BackgroundLight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Add
@@ -2459,30 +2462,291 @@ fun HelpBottomSheet(onDismiss: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutBottomSheet(onDismiss: () -> Unit) {
-    Dialog(properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false), onDismissRequest = onDismiss) {
-        
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.White)
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+    Dialog(
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
+        onDismissRequest = onDismiss
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(BackgroundLight)
+                .verticalScroll(rememberScrollState())
+        ) {
+            // Header Dialog
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = Color.White,
+                shadowElevation = 2.dp
             ) {
-                Icon(imageVector = Icons.Default.Security, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(48.dp))
-                Spacer(modifier = Modifier.height(10.dp))
-                Text(text = "RuangWarga", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
-                Text(text = "Versi 2.0.0 (Official Release)", fontSize = 12.sp, color = TextSecondary)
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = "Aplikasi manajemen komunitas warga, surat-menyurat digital, kas transparan, agenda lingkungan, dan tanggap darurat RT 03 / RW 02.",
-                    fontSize = 12.sp,
-                    color = TextSecondary,
-                    textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-                Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp)) {
-                    Text("Tutup")
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 14.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color(0xFFDCFCE7)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = "🌿", fontSize = 18.sp)
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = "Tentang RuangWarga",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextPrimary
+                            )
+                            Text(
+                                text = "Platform Digital RT/RW Indonesia",
+                                fontSize = 11.sp,
+                                color = TextSecondary
+                            )
+                        }
+                    }
+
+                    IconButton(onClick = onDismiss) {
+                        Icon(imageVector = Icons.Default.Close, contentDescription = "Tutup", tint = TextSecondary)
+                    }
                 }
             }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Hero Banner
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(
+                            Brush.linearGradient(
+                                colors = listOf(
+                                    Color(0xFF0F172A),
+                                    Color(0xFF1E293B),
+                                    Color(0xFF047857)
+                                )
+                            )
+                        )
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(70.dp)
+                                .clip(CircleShape)
+                                .background(Color.White.copy(alpha = 0.15f))
+                                .border(2.dp, Color.White.copy(alpha = 0.3f), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = "🇮🇩", fontSize = 32.sp)
+                        }
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        Text(
+                            text = "RuangWarga App",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color.White,
+                            letterSpacing = 0.5.sp
+                        )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFF10B981).copy(alpha = 0.25f)
+                        ) {
+                            Text(
+                                text = "Versi 2.0.0 • Edisi Komersial Nasional",
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF6EE7B7),
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        Text(
+                            text = "Solusi Ekosistem Digital Pintar Terintegrasi untuk Seluruh Pengurus RT, RW, Perumahan, dan Warga di Seluruh Penjuru Nusantara.",
+                            fontSize = 12.sp,
+                            color = Color.White.copy(alpha = 0.85f),
+                            textAlign = TextAlign.Center,
+                            lineHeight = 18.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Creator & Developer Profile Card
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(18.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(46.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        Brush.linearGradient(
+                                            colors = listOf(Color(0xFF2563EB), Color(0xFF1D4ED8))
+                                        )
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = "👨‍💻", fontSize = 22.sp)
+                            }
+
+                            Spacer(modifier = Modifier.width(14.dp))
+
+                            Column {
+                                Text(
+                                    text = "Inisiator & Pembuat Aplikasi",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = TextSecondary
+                                )
+                                Text(
+                                    text = "Dendi AN",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextPrimary
+                                )
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = Color(0xFFEFF6FF),
+                                    modifier = Modifier.padding(top = 2.dp)
+                                ) {
+                                    Text(
+                                        text = "Founder & Chief Architect",
+                                        fontSize = 10.5.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Color(0xFF2563EB),
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(14.dp))
+                        HorizontalDivider(thickness = 0.8.dp, color = Color(0xFFF1F5F9))
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Text(
+                            text = "Dirancang dan dikembangkan dengan komitmen kuat untuk memodernisasi tata kelola administrasi warga, transparansi keuangan lingkungan, serta menciptakan komunitas yang rukun, aman, dan siaga bahaya di seluruh Indonesia.",
+                            fontSize = 11.5.sp,
+                            color = TextSecondary,
+                            lineHeight = 17.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Pilar Layanan Komersial RuangWarga
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(18.dp)
+                    ) {
+                        Text(
+                            text = "Keunggulan Sistem RuangWarga",
+                            fontSize = 13.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        val features = listOf(
+                            Triple("⚡", "Sistem Darurat & Sirene Real-time", "Sirine SOS instan & notifikasi bahaya lingkungan"),
+                            Triple("📑", "Persuratan Digital Cepat", "Pengajuan surat domisili, SKCK, & cetak PDF otomatis"),
+                            Triple("💰", "Buku Kas & Iuran Transparan", "Laporan keuangan kas RT/RW terbuka & akuntabel"),
+                            Triple("🗓️", "Agenda Kalender & Musyawarah", "Kalender kegiatan, kerja bakti, dan polling online"),
+                            Triple("🔒", "Multi-Tenant & Keamanan Data", "Dapat disesuaikan untuk RT, RW, Klaster, dan Perumahan se-Indonesia")
+                        )
+
+                        features.forEachIndexed { idx, (icon, title, desc) ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 6.dp),
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                Text(text = icon, fontSize = 16.sp)
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(text = title, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+                                    Text(text = desc, fontSize = 11.sp, color = TextSecondary)
+                                }
+                            }
+                            if (idx < features.size - 1) {
+                                HorizontalDivider(thickness = 0.6.dp, color = Color(0xFFF8FAFC), modifier = Modifier.padding(start = 28.dp, top = 4.dp, bottom = 4.dp))
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreenDark)
+                ) {
+                    Text(
+                        text = "Tutup Informasi",
+                        fontSize = 13.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "© 2026 RuangWarga by Dendi AN. Hak Cipta Dilindungi Undang-Undang.",
+                    fontSize = 10.5.sp,
+                    color = Color(0xFF94A3B8),
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
     }
 }
+

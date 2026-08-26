@@ -158,7 +158,7 @@ fun LayananScreen(
         ),
         ServiceCategoryGroup(
             categoryTitle = "Komunitas Warga",
-            categorySubtitle = "Direktori pengurus dan warga lingkungan RW 02",
+            categorySubtitle = "Direktori pengurus dan warga lingkungan RT/RW",
             items = listOf(
                 ServiceMenuCardItem(
                     id = "warga",
